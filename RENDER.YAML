@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: metaearn
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: flask db upgrade && gunicorn app:app
