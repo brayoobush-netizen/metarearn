@@ -6,24 +6,27 @@ from models import db, User
 import random, os
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
+from flask_migrate import Migrate   # <-- NEW
 
 app = Flask(__name__)
 app.secret_key = "your_secret_key"
 
 # Database config
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///users.db"
+# Use Postgres in production (Render), SQLite locally
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///users.db")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db.init_app(app)
+migrate = Migrate(app, db)   # <-- NEW
 
 # Uploads folder for proof images
 UPLOAD_FOLDER = "uploads"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Create tables if they don’t exist
-with app.app_context():
-    db.create_all()
+# ⚠️ REMOVE db.create_all() — migrations handle table creation now
+# with app.app_context():
+#     db.create_all()
 
 # Landing page
 @app.route("/")
@@ -38,7 +41,8 @@ def register():
         password = request.form["password"]
 
         hashed_pw = generate_password_hash(password)
-        new_user = User(email=email, password=hashed_pw, wallet_balance=0.0, total_views=0, total_earnings=0.0)
+        new_user = User(email=email, password=hashed_pw,
+                        wallet_balance=0.0, total_views=0, total_earnings=0.0)
         db.session.add(new_user)
         db.session.commit()
 
@@ -72,7 +76,6 @@ def verify():
     if request.method == "POST":
         entered_otp = request.form["otp"]
         if entered_otp == session.get("otp"):
-            # OTP correct → allow login
             session["user_id"] = session["pending_user_id"]
             session.pop("otp", None)
             session.pop("pending_user_id", None)
@@ -112,18 +115,14 @@ def upload_views():
         return redirect(url_for("login"))
 
     user = User.query.get(session["user_id"])
-
-    # Get views count from form
     views = int(request.form["views"])
-    earnings = views * 0.025  # $0.025 per view
+    earnings = views * 0.025
 
-    # Update wallet balance and totals
     user.total_views += views
     user.total_earnings += earnings
     user.wallet_balance += earnings
     db.session.commit()
 
-    # Handle uploaded PNG proof
     if "proof" in request.files:
         file = request.files["proof"]
         if file.filename.endswith(".png"):
