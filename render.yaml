@@ -3,4 +3,4 @@ services:
     name: metaearn
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: flask db upgrade && gunicorn app:app
+    startCommand: echo "USING RENDER.YAML" && flask db upgrade && gunicorn app:app
