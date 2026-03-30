@@ -1,0 +1,97 @@
+<!-- templates/verify.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Verify OTP</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+  <style>
+    body {
+      background: linear-gradient(to bottom, #0f9d58, #34a853);
+      font-family: 'Segoe UI', sans-serif;
+      color: #fff;
+    }
+    .card {
+      background-color: #128c7e;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 50px;
+    }
+    .btn-custom {
+      background-color: #25d366;
+      color: #000;
+      font-weight: bold;
+      border-radius: 8px;
+    }
+    .emoji-feedback {
+      font-size: 2rem;
+      margin-top: 15px;
+    }
+  </style>
+</head>
+<body>
+<div class="container mt-5 animate__animated animate__fadeInUp">
+  <h2 class="text-center mb-4">🔐 Verify OTP</h2>
+  <form method="POST" action="/verify" class="card p-4 shadow text-center" id="otpForm">
+    <div class="mb-3">
+      <label>Enter OTP</label>
+      <input type="text" name="otp" class="form-control" required>
+    </div>
+    <button type="submit" class="btn btn-custom w-100">Verify</button>
+
+    <!-- Flash messages from Flask -->
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div id="feedback" class="emoji-feedback animate__animated">
+          {{ messages[0] }}
+        </div>
+      {% endif %}
+    {% endwith %}
+  </form>
+
+  <div class="text-center mt-3">
+    <button id="resendBtn" class="btn btn-secondary" disabled>Resend OTP (30s)</button>
+  </div>
+</div>
+
+<script>
+  // Confetti for success
+  function launchConfetti() {
+    confetti({
+      particleCount: 120,
+      spread: 70,
+      origin: { y: 0.6 }
+    });
+  }
+
+  // Emoji feedback based on flash message
+  const feedback = document.getElementById("feedback");
+  if (feedback) {
+    const msg = feedback.textContent.toLowerCase();
+    if (msg.includes("invalid")) {
+      feedback.textContent = "❌ Wrong OTP!";
+      feedback.classList.add("animate__shakeX");
+    } else if (msg.includes("otp") || msg.includes("verified")) {
+      feedback.textContent = "✅ OTP Verified!";
+      feedback.classList.add("animate__bounceIn");
+      launchConfetti();
+    }
+  }
+
+  // Countdown for resend button
+  let countdown = 30;
+  const resendBtn = document.getElementById("resendBtn");
+  const timer = setInterval(() => {
+    countdown--;
+    resendBtn.textContent = `Resend OTP (${countdown}s)`;
+    if (countdown <= 0) {
+      clearInterval(timer);
+      resendBtn.textContent = "Resend OTP";
+      resendBtn.disabled = false;
+    }
+  }, 1000);
+</script>
+</body>
+</html>
