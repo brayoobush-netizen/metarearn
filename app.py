@@ -6,27 +6,27 @@ from models import db, User
 import random, os
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
-from flask_migrate import Migrate   # <-- NEW
+from flask_migrate import Migrate
 
 app = Flask(__name__)
-app.secret_key = "your_secret_key"
 
-# Database config
-# Use Postgres in production (Render), SQLite locally
+# ✅ Use environment variable for secret key
+app.secret_key = os.environ.get("SECRET_KEY", "dev_secret")
+
+# ✅ Database config: Postgres in production, SQLite locally
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///users.db")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
+# ✅ Initialize DB + migrations
 db.init_app(app)
-migrate = Migrate(app, db)   # <-- NEW
+migrate = Migrate(app, db)
 
 # Uploads folder for proof images
 UPLOAD_FOLDER = "uploads"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# ⚠️ REMOVE db.create_all() — migrations handle table creation now
-# with app.app_context():
-#     db.create_all()
+# ⚠️ Removed db.create_all() — migrations handle table creation now
 
 # Landing page
 @app.route("/")
@@ -51,7 +51,7 @@ def register():
         session["otp"] = otp
         session["pending_user_id"] = new_user.id
 
-        # Send OTP
+        # Send OTP via SendGrid
         message = Mail(
             from_email="metarearn@gmail.com",
             to_emails=email,

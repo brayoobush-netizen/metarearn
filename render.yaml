@@ -1,6 +1,20 @@
 services:
   - type: web
-    name: metaearn
+    name: metarearn
     env: python
-    buildCommand: pip install -r requirements.txt
+    plan: free
+    autoDeploy: true
+
+    buildCommand: |
+      pip install -r requirements.txt
+      flask db upgrade
+
     startCommand: gunicorn app:app
+
+    envVars:
+      - key: DATABASE_URL
+        value: postgresql://metarearn_user:9k1q4SrqY34SJDAKFlXJa6wiBUWXD8EH@dpg-d75apgnfte5s73avvu30-a.oregon-postgres.render.com/metarearn
+      - key: SECRET_KEY
+        value: your_secret_here
+      - key: SENDGRID_API_KEY
+        value: your_sendgrid_key_here
