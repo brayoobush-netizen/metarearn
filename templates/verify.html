@@ -29,7 +29,6 @@
       font-size: 2rem;
       margin-top: 15px;
     }
-    /* Glitch effect for Gen Z vibes */
     .glitch {
       position: relative;
       font-size: 1.5em;
@@ -40,7 +39,6 @@
       50% { text-shadow: -2px -2px blue; }
       100% { text-shadow: 2px -2px lime; }
     }
-    /* Emoji rain */
     .emoji {
       position: fixed;
       top: -50px;
@@ -50,6 +48,11 @@
     }
     @keyframes fall {
       to { transform: translateY(100vh); }
+    }
+    .spam-note {
+      font-size: 14px;
+      color: #eee;
+      margin-top: 10px;
     }
   </style>
 </head>
@@ -71,10 +74,19 @@
         </div>
       {% endif %}
     {% endwith %}
+
+    <!-- ✅ Spam folder note -->
+    <p class="spam-note">
+      Didn’t get the OTP? Please check your <strong>Spam</strong> or <strong>Promotions</strong> folder.
+      If you still don’t see it, try resending.
+    </p>
   </form>
 
+  <!-- ✅ Resend OTP form -->
   <div class="text-center mt-3">
-    <button id="resendBtn" class="btn btn-secondary" disabled>Resend OTP (30s)</button>
+    <form method="POST" action="{{ url_for('resend_otp') }}">
+      <button id="resendBtn" class="btn btn-secondary" disabled>Resend OTP (30s)</button>
+    </form>
   </div>
 </div>
 
@@ -88,7 +100,7 @@
     });
   }
 
-  // Emoji rain for extreme fantasy vibes
+  // Emoji rain
   function emojiRain() {
     const emojis = ["💸","🧠","🔥","🌈","✨","😎","👾","💥","🎉"];
     for (let i = 0; i < 20; i++) {
@@ -101,7 +113,7 @@
     }
   }
 
-  // Feedback animations based on flash message
+  // Feedback animations
   const feedback = document.getElementById("feedback");
   if (feedback) {
     const msg = feedback.textContent.toLowerCase();
