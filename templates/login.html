@@ -1,85 +1,90 @@
-<!-- templates/login.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>MetaEarn | Login</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - MetaEarn 🚀</title>
   <style>
     body {
-      background: linear-gradient(135deg, #4285f4, #34a853, #fbbc05, #ea4335);
-      background-size: 400% 400%;
-      animation: gradientBG 12s ease infinite;
-      font-family: 'Segoe UI', sans-serif;
-      color: #fff;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: url("/static/images/login-bg.jpg") no-repeat center center fixed;
+      background-size: cover;
     }
-    @keyframes gradientBG {
-      0% {background-position: 0% 50%;}
-      50% {background-position: 100% 50%;}
-      100% {background-position: 0% 50%;}
+    .container {
+      max-width: 400px;
+      margin: 40px auto;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     }
-    .card {
-      background-color: rgba(0,0,0,0.6);
-      border-radius: 15px;
-      padding: 30px;
-      margin-top: 60px;
-      color: #fff;
+    .brand {
+      text-align: center;
+      margin-bottom: 20px;
     }
-    .btn-glow {
-      background: linear-gradient(90deg, #4285f4, #34a853);
+    .brand h1 {
+      font-size: 28px;
+      margin: 0;
+      color: #007bff;
+    }
+    .brand .rocket {
+      font-size: 40px;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+    input[type="email"], input[type="password"] {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #007bff;
+      color: white;
       border: none;
-      border-radius: 30px;
-      padding: 12px;
-      font-size: 1.2rem;
-      color: #fff;
-      box-shadow: 0 0 20px rgba(66,133,244,0.7);
-      transition: transform 0.3s, box-shadow 0.3s;
+      border-radius: 5px;
+      cursor: pointer;
     }
-    .btn-glow:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 40px rgba(66,133,244,1);
+    button:hover {
+      background: #0056b3;
+    }
+    .register-section {
+      margin-top: 20px;
+      text-align: center;
+    }
+    .register-section a {
+      color: #007bff;
+      text-decoration: none;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="row justify-content-center">
-      <div class="col-md-6">
-        <div class="card animate__animated animate__fadeInUp">
-          <h2 class="text-center mb-4">🔑 Login to MetaEarn</h2>
-          <form method="POST" action="/login" onsubmit="launchConfetti()">
-            <div class="mb-3">
-              <label>Email</label>
-              <input type="email" name="email" class="form-control" required>
-            </div>
-            <div class="mb-3">
-              <label>Password</label>
-              <input type="password" name="password" class="form-control" required>
-            </div>
-            <button type="submit" class="btn-glow w-100">Login</button>
-          </form>
-          {% with messages = get_flashed_messages() %}
-            {% if messages %}
-              <div class="alert alert-danger mt-3 animate__animated animate__shakeX">
-                {{ messages[0] }}
-              </div>
-            {% endif %}
-          {% endwith %}
-        </div>
-      </div>
+    <!-- ✅ MetaEarn branding with rocket -->
+    <div class="brand">
+      <h1>MetaEarn <span class="rocket">🚀</span></h1>
+      <p>Welcome back, let’s launch!</p>
+    </div>
+
+    <h2>Log In</h2>
+    <form method="POST" action="{{ url_for('login') }}">
+      <input type="email" name="email" placeholder="Email" required>
+      <input type="password" name="password" placeholder="Password" required>
+      <button type="submit">Log In</button>
+    </form>
+
+    <!-- ✅ Register section below login -->
+    <div class="register-section">
+      <p>Don’t have an account yet?</p>
+      <a href="{{ url_for('register') }}">Create one here</a>
     </div>
   </div>
-
-  <script>
-    function launchConfetti() {
-      confetti({
-        particleCount: 120,
-        spread: 60,
-        origin: { y: 0.6 }
-      });
-    }
-  </script>
 </body>
 </html>
