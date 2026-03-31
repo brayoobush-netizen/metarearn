@@ -4,20 +4,35 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login - MetaEarn 🚀</title>
+
+  <!-- Preload background image for faster paint -->
+  <link rel="preload" as="image" href="{{ url_for('static', filename='images/login-bg.jpg') }}">
+
   <style>
+    html {
+      height: 100%;
+      background: url("{{ url_for('static', filename='images/login-bg.jpg') }}")
+                  no-repeat center 15% fixed;
+      background-size: cover;
+    }
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: url("/static/images/login-bg.jpg") no-repeat center 15% fixed;
-      background-size: cover;
+      height: 100%;
     }
     .container {
       max-width: 400px;
       margin: 40px auto;
-      background: rgba(255, 255, 255, 0.35);
+      background: rgba(255, 255, 255, 0.35); /* semi-transparent */
       padding: 20px;
       border-radius: 10px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      backdrop-filter: blur(6px); /* subtle blur behind */
+      animation: fadeIn 0.8s ease-in-out; /* smooth arrival */
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
     .brand {
       text-align: center;
@@ -62,6 +77,16 @@
       color: #007bff;
       text-decoration: none;
       font-weight: bold;
+    }
+    /* Mobile tweaks */
+    @media (max-width: 480px) {
+      .container {
+        margin: 20px;
+        padding: 15px;
+      }
+      .brand h1 {
+        font-size: 22px;
+      }
     }
   </style>
 </head>
