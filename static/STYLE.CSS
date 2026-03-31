@@ -3,14 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sticky Footer Example</title>
+  <title>Sticky Footer Fixed</title>
   <style>
     /* Base layout */
     html, body {
-      height: 100%;              /* Full height */
+      height: 100%;
       margin: 0;
+    }
+
+    body {
       display: flex;
-      flex-direction: column;    /* Stack elements vertically */
+      flex-direction: column;
+      min-height: 100vh;   /* Full viewport height */
       background: linear-gradient(135deg, #0A2342, #2E86AB);
       font-family: 'Segoe UI', sans-serif;
       color: #333;
@@ -18,7 +22,7 @@
     }
 
     main {
-      flex: 1;                   /* Push footer down */
+      flex: 1;             /* Take up remaining space */
     }
 
     /* Navbar */
@@ -117,6 +121,7 @@
 
     /* Footer */
     .footer {
+      margin-top: auto;    /* Push footer to bottom */
       background: rgba(0,0,0,0.85);
       color: #fff;
       text-align: center;
@@ -154,7 +159,7 @@
   <main>
     <section class="hero">
       <h1>Hero Section</h1>
-      <p>This is a short page, but the footer will stick to the bottom.</p>
+      <p>This is a short page, but the footer will stick to the bottom of the phone screen.</p>
       <button class="btn-lg btn-primary">Get Started</button>
       <button class="btn-lg btn-success">Learn More</button>
     </section>
