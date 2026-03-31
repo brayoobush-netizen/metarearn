@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MetaEarn Features</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      padding: 40px 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 40px;
+    }
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 30px;
+    }
+    .feature {
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      padding: 20px;
+      text-align: center;
+      transition: transform 0.3s ease;
+    }
+    .feature:hover { transform: translateY(-5px); }
+    .feature img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-bottom: 15px;
+    }
+    .feature h3 { color: #0077cc; margin-bottom: 10px; }
+    .feature p { color: #555; font-size: 15px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Explore MetaEarn Features</h1>
+    <div class="features">
+      <div class="feature" id="interactive_rewards">
+        <img src="{{ url_for('static', filename='images/interactive_rewards.png') }}" alt="Interactive Rewards">
+        <h3>Interactive Rewards</h3>
+        <p>Engage with interactive tools and earn rewards. Unlock badges, points, and bonuses as you participate.</p>
+      </div>
+      <div class="feature" id="track_progress">
+        <img src="{{ url_for('static', filename='images/track_progress.png') }}" alt="Track Progress">
+        <h3>Track Progress</h3>
+        <p>Track your progress with colorful dashboards. Visualize your growth and achievements in real time.</p>
+      </div>
+      <div
