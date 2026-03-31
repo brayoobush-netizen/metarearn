@@ -44,9 +44,21 @@ def register():
         email = request.form["email"]
         password = request.form["password"]
 
+        # ✅ Check if email already exists
+        existing_user = User.query.filter_by(email=email).first()
+        if existing_user:
+            flash("⚠️ Email already registered. Please log in.", "error")
+            return redirect(url_for("login"))
+
+        # Hash password before saving
         hashed_pw = generate_password_hash(password)
-        new_user = User(email=email, password=hashed_pw,
-                        wallet_balance=0.0, total_views=0, total_earnings=0.0)
+        new_user = User(
+            email=email,
+            password=hashed_pw,
+            wallet_balance=0.0,
+            total_views=0,
+            total_earnings=0.0
+        )
         db.session.add(new_user)
         db.session.commit()
 
