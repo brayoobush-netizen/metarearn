@@ -25,14 +25,12 @@ UPLOAD_FOLDER = "uploads"
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# ⚠️ Removed db.create_all() — migrations handle table creation now
-
 # Landing page
 @app.route("/")
 def landing():
     return render_template("landing.html")
 
-# Features page (NEW)
+# Features page
 @app.route("/features")
 def features():
     return render_template("features.html")
@@ -66,6 +64,7 @@ def register():
         otp = str(random.randint(100000, 999999))
         session["otp"] = otp
         session["pending_user_id"] = new_user.id
+        session["pending_email"] = email  # ✅ store email for resend
 
         # Send OTP via SendGrid
         message = Mail(
@@ -95,11 +94,40 @@ def verify():
             session["user_id"] = session["pending_user_id"]
             session.pop("otp", None)
             session.pop("pending_user_id", None)
+            session.pop("pending_email", None)
             flash("✅ OTP Verified! You can now log in.")
             return redirect(url_for("login"))
         else:
             flash("❌ Invalid OTP. Try again.")
     return render_template("verify.html")
+
+# ✅ Resend OTP route
+@app.route("/resend_otp", methods=["POST"])
+def resend_otp():
+    email = session.get("pending_email")
+    if not email:
+        flash("⚠️ No pending email found. Please register again.")
+        return redirect(url_for("register"))
+
+    # Generate new OTP
+    otp = str(random.randint(100000, 999999))
+    session["otp"] = otp
+
+    # Send OTP via SendGrid
+    message = Mail(
+        from_email="metarearn@gmail.com",
+        to_emails=email,
+        subject="MetaEarn OTP Resend",
+        html_content=f"<h3>Your new OTP code is <b>{otp}</b></h3>"
+    )
+    try:
+        sg = SendGridAPIClient(os.environ.get("SENDGRID_API_KEY"))
+        sg.send(message)
+        flash("New OTP sent! Check your inbox or spam folder.")
+    except Exception as e:
+        flash(f"⚠️ Error resending OTP: {str(e)}")
+
+    return redirect(url_for("verify"))
 
 # Login
 @app.route("/login", methods=["GET", "POST"])
