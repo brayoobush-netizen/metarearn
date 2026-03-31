@@ -6,6 +6,7 @@
   <title>MetaEarn | Dashboard</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
   <style>
     body {
       background: linear-gradient(135deg, #4285f4, #34a853, #fbbc05, #ea4335);
@@ -14,34 +15,36 @@
       font-family: 'Segoe UI', sans-serif;
       color: #fff;
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
+      overflow-y: scroll;
     }
     @keyframes gradientBG {
       0% {background-position: 0% 50%;}
       50% {background-position: 100% 50%;}
       100% {background-position: 0% 50%;}
     }
-    .nav-tabs .nav-link {
-      color: #fff;
-      font-weight: bold;
-    }
-    .nav-tabs .nav-link.active {
-      background-color: rgba(0,0,0,0.4);
-      border-radius: 10px;
-    }
-    .tab-content {
+    .section {
       background-color: rgba(0,0,0,0.5);
       border-radius: 15px;
       padding: 20px;
-      margin-top: 20px;
+      margin: 20px 0;
+    }
+    .task-card {
+      background-color: rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 15px;
+      transition: transform 0.2s;
+    }
+    .task-card:hover {
+      transform: scale(1.03);
+      background-color: rgba(255,255,255,0.2);
     }
     footer {
       background-color: rgba(0,0,0,0.6);
       padding: 15px;
       text-align: center;
-      margin-top: auto;
       color: #fff;
+      margin-top: 40px;
     }
     .whatsapp-float {
       position: fixed;
@@ -68,76 +71,73 @@
       🌌 Welcome {{ user.email }}
     </h2>
 
-    <!-- Tabs -->
-    <ul class="nav nav-tabs justify-content-center mt-4" id="dashboardTabs" role="tablist">
-      <li class="nav-item">
-        <a class="nav-link active" id="wallet-tab" data-bs-toggle="tab" href="#wallet" role="tab">💰 Wallet</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" id="tasks-tab" data-bs-toggle="tab" href="#tasks" role="tab">📋 Tasks</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" id="rewards-tab" data-bs-toggle="tab" href="#rewards" role="tab">🏆 Rewards</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" id="profile-tab" data-bs-toggle="tab" href="#profile" role="tab">👤 Profile</a>
-      </li>
-    </ul>
+    <!-- Wallet Section -->
+    <div class="section">
+      <h3>💰 Wallet</h3>
+      <p><strong>Balance:</strong> ${{ "%.2f"|format(user.wallet_balance) }}</p>
+      <p><strong>Total Views:</strong> {{ user.total_views }}</p>
+      <p><strong>Total Earnings:</strong> ${{ "%.2f"|format(user.total_earnings) }}</p>
+    </div>
 
-    <!-- Tab Content -->
-    <div class="tab-content" id="dashboardTabsContent">
-      <!-- Wallet -->
-      <div class="tab-pane fade show active" id="wallet" role="tabpanel">
-        <h4>Wallet Balance: ${{ "%.2f"|format(user.wallet_balance) }}</h4>
-        <p>Total Views: {{ user.total_views }}</p>
-        <p>Total Earnings: ${{ "%.2f"|format(user.total_earnings) }}</p>
-      </div>
+    <!-- Tasks Section -->
+    <div class="section">
+      <h3>📋 Tasks</h3>
+      <p>Complete tasks below to earn money. Upload proof when required.</p>
 
-      <!-- Tasks -->
-      <div class="tab-pane fade" id="tasks" role="tabpanel">
-        <h4>📋 Status Views Task</h4>
-        <p>Download the image below, post it as your status, then upload proof of views.</p>
-
-        <!-- Downloadable PNG -->
-        <a href="/static/task_image.png" download class="btn btn-primary mb-3">⬇️ Download Task Image</a>
-
-        <!-- Upload Proof -->
+      <!-- Example Task Card -->
+      <div class="task-card">
+        <h5>📢 Status Views Task</h5>
+        <p>Post our image as your WhatsApp status and upload proof of views.</p>
+        <p><strong>Reward:</strong> $0.025 per view</p>
+        <a href="/static/task_image.png" download class="btn btn-primary btn-sm mb-2">⬇️ Download Task Image</a>
         <form method="POST" action="/upload_views" enctype="multipart/form-data">
-          <div class="mb-3">
-            <label>Enter Views Count</label>
-            <input type="number" name="views" class="form-control" required>
+          <div class="mb-2">
+            <input type="number" name="views" class="form-control" placeholder="Enter Views Count" required>
           </div>
-          <div class="mb-3">
-            <label>Upload Proof (PNG)</label>
+          <div class="mb-2">
             <input type="file" name="proof" accept="image/png" class="form-control" required>
           </div>
           <button type="submit" class="btn btn-success w-100">Submit & Earn</button>
         </form>
       </div>
 
-      <!-- Rewards -->
-      <div class="tab-pane fade" id="rewards" role="tabpanel">
-        <h4>🏆 Rewards</h4>
-        <p>Unlock rewards by completing tasks.</p>
-        <ul>
-          <li>Reward 1: Bonus wallet credit after 500 views</li>
-          <li>Reward 2: Exclusive badge after $50 earned</li>
-          <li>Reward 3: Priority support after $100 earned</li>
-        </ul>
+      <!-- Add more task cards here -->
+      <div class="task-card">
+        <h5>🎥 Video Share Task</h5>
+        <p>Share our promotional video link and record the number of views.</p>
+        <p><strong>Reward:</strong> $0.05 per share</p>
+        <button class="btn btn-info btn-sm">Get Video Link</button>
       </div>
 
-      <!-- Profile -->
-      <div class="tab-pane fade" id="profile" role="tabpanel">
-        <h4>👤 Profile</h4>
-        <p>Email: {{ user.email }}</p>
-        <a href="/logout" class="btn btn-warning">Logout</a>
+      <div class="task-card">
+        <h5>📝 Survey Task</h5>
+        <p>Complete a short survey to help us improve MetaEarn.</p>
+        <p><strong>Reward:</strong> $1.00 per survey</p>
+        <button class="btn btn-warning btn-sm">Start Survey</button>
       </div>
+    </div>
+
+    <!-- Rewards Section -->
+    <div class="section">
+      <h3>🏆 Rewards</h3>
+      <ul>
+        <li>Bonus wallet credit after 500 views</li>
+        <li>Exclusive badge after $50 earned</li>
+        <li>Priority support after $100 earned</li>
+      </ul>
+    </div>
+
+    <!-- Profile Section -->
+    <div class="section">
+      <h3>👤 Profile</h3>
+      <p><strong>Email:</strong> {{ user.email }}</p>
+      <a href="/logout" class="btn btn-danger">Logout</a>
     </div>
   </div>
 
   <!-- Footer -->
   <footer>
-    <p>Need help? Contact us at: <strong>support@metaearn.com</strong> | <strong>help@metaearn.com</strong></p>
+    <p>Need help? Contact us at: <strong>metarearn@gmail.com</strong> | <strong>support@metaearn.com</strong></p>
   </footer>
 
   <!-- Floating WhatsApp Button -->
@@ -146,7 +146,5 @@
   </a>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  <!-- Bootstrap Icons for WhatsApp -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 </body>
 </html>
