@@ -1,4 +1,3 @@
-# app.py
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -32,6 +31,11 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 @app.route("/")
 def landing():
     return render_template("landing.html")
+
+# Features page (NEW)
+@app.route("/features")
+def features():
+    return render_template("features.html")
 
 # Register → send OTP
 @app.route("/register", methods=["GET", "POST"])

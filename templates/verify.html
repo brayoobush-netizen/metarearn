@@ -6,7 +6,7 @@
   <title>Verify OTP</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   <style>
     body {
       background: linear-gradient(to bottom, #0f9d58, #34a853);
@@ -29,6 +29,28 @@
       font-size: 2rem;
       margin-top: 15px;
     }
+    /* Glitch effect for Gen Z vibes */
+    .glitch {
+      position: relative;
+      font-size: 1.5em;
+      animation: glitch 1s infinite;
+    }
+    @keyframes glitch {
+      0% { text-shadow: 2px 2px red; }
+      50% { text-shadow: -2px -2px blue; }
+      100% { text-shadow: 2px -2px lime; }
+    }
+    /* Emoji rain */
+    .emoji {
+      position: fixed;
+      top: -50px;
+      font-size: 2rem;
+      animation: fall 3s linear forwards;
+      pointer-events: none;
+    }
+    @keyframes fall {
+      to { transform: translateY(100vh); }
+    }
   </style>
 </head>
 <body>
@@ -44,7 +66,7 @@
     <!-- Flash messages from Flask -->
     {% with messages = get_flashed_messages() %}
       {% if messages %}
-        <div id="feedback" class="emoji-feedback animate__animated">
+        <div id="feedback" class="emoji-feedback animate__animated glitch">
           {{ messages[0] }}
         </div>
       {% endif %}
@@ -60,13 +82,26 @@
   // Confetti for success
   function launchConfetti() {
     confetti({
-      particleCount: 120,
-      spread: 70,
+      particleCount: 150,
+      spread: 100,
       origin: { y: 0.6 }
     });
   }
 
-  // Emoji feedback based on flash message
+  // Emoji rain for extreme fantasy vibes
+  function emojiRain() {
+    const emojis = ["💸","🧠","🔥","🌈","✨","😎","👾","💥","🎉"];
+    for (let i = 0; i < 20; i++) {
+      const emoji = document.createElement("div");
+      emoji.className = "emoji";
+      emoji.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+      emoji.style.left = Math.random() * 100 + "vw";
+      document.body.appendChild(emoji);
+      setTimeout(() => emoji.remove(), 3000);
+    }
+  }
+
+  // Feedback animations based on flash message
   const feedback = document.getElementById("feedback");
   if (feedback) {
     const msg = feedback.textContent.toLowerCase();
@@ -77,6 +112,7 @@
       feedback.textContent = "✅ OTP Verified!";
       feedback.classList.add("animate__bounceIn");
       launchConfetti();
+      emojiRain();
     }
   }
 
