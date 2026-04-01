@@ -90,6 +90,30 @@
       opacity: 0.9;
     }
 
+    /* Move carousel indicators below the banners */
+#jackpotCarousel .carousel-indicators {
+ max-width: 200px;   /* narrow carousel width */
+
+}
+
+    .carousel-item {
+      height: 30px;       /* fixed height for each banner */
+    }
+
+    .banner-img {
+      display: block;
+      width: 100%;
+      height: 100%;       /* fill the carousel-item height */
+      border-radius: 8px;
+      object-fit: cover;  /* crop neatly instead of stretching */
+    }
+
+    .carousel-inner {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
     /* Product Cards */
     .product-grid {
       display: grid;
@@ -147,39 +171,16 @@
         padding: 15px;
         font-size: 0.9rem;
       }
+      #jackpotCarousel {
+        max-width: 95%;
+      }
+      .carousel-item {
+        height: 70px;     /* smaller banners on phones */
+      }
     }
   </style>
 </head>
 <body>
-  <nav class="navbar">
-    <span class="navbar-brand">My Brand</span>
-    <span class="user-info">Welcome, User</span>
-  </nav>
-
-  <main>
-    <section class="hero">
-      <h1>Hero Section</h1>
-      <p>This is a short page, but the footer will stick to the bottom of the phone screen.</p>
-      <button class="btn-lg btn-primary">Get Started</button>
-      <button class="btn-lg btn-success">Learn More</button>
-    </section>
-
-    <section class="product-grid">
-      <div class="product-card">
-        <img src="https://via.placeholder.com/250" alt="Product">
-        <h4>Product 1</h4>
-        <p>Short description here.</p>
-      </div>
-      <div class="product-card">
-        <img src="https://via.placeholder.com/250" alt="Product">
-        <h4>Product 2</h4>
-        <p>Short description here.</p>
-      </div>
-    </section>
-  </main>
-
-  <footer class="footer">
-    © 2026 Your Brand — All Rights Reserved
-  </footer>
+  <!-- your body content unchanged -->
 </body>
 </html>

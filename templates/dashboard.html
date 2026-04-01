@@ -37,17 +37,37 @@
       background: #333; color: #fff; padding: 8px;
       display: flex; align-items: center; overflow: hidden; white-space: nowrap;
     }
-    .ticker i { margin-right: 10px; }
-    .ticker-text { display: inline-block; animation: scrollText 25s linear infinite; }
+    .ticker i { margin-right: 100px; }
+    .ticker-text { display: inline-block; animation: scrollText 100s linear infinite; }
     @keyframes scrollText { 0%{transform:translateX(100%);}100%{transform:translateX(-100%);} }
-    /* Hero banners */
+    /* 🔥 HERO + CAROUSEL FIX ONLY */
     .hero-banner {
       background: linear-gradient(135deg,#ff9800,#f44336,#4caf50,#2196f3);
-      background-size: 400% 400%; animation: glowBG 10s ease infinite;
-      color:#fff; padding:20px; text-align:center; border-radius:12px; margin:10px;
-      box-shadow:0 0 20px rgba(255,255,255,0.7);
+      background-size: 400% 400%;
+      animation: glowBG 10s ease infinite;
+      color:#fff;
+      padding: 0;
+      text-align:center;
+      border-radius: 0;
+      margin: 0;
+      height: 110px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: none;
     }
-    @keyframes glowBG {0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;}}
+
+    .banner-img {
+      width: 100%;
+      height: 370px;
+      object-fit: bottom;
+    }
+
+    @keyframes glowBG {
+      0%{background-position:0% 50%;}
+      50%{background-position:100% 50%;}
+      100%{background-position:0% 50%;}
+    }
     /* Icon grid */
     .icon-grid { display:flex; justify-content:space-around; margin:10px; }
     .icon-box { text-align:center; flex:1; color:#fff; }
@@ -92,7 +112,9 @@
   <div class="ticker">
     <i class="bi bi-mic-fill"></i>
     <div class="ticker-text">
-      MetaEarn — founded in 2013, empowering users with daily income opportunities • Invest smart, earn consistently • Invite friends and unlock exclusive gifts • Bonuses up to 20% for active members • Special offers and promotions every season • MetaEarn history: over a decade of trust and growth • Keep earning, keep winning...
+     MetaEarn — founded in 2013, empowering users with daily income opportunities • Invest smart, earn consistently • Invite friends and unlock exclusive gifts • Bonuses up to 20% for active members • Special offers and promotions every season • MetaEarn history: over a decade of trust and growth • Keep earning, keep winning • A platform built on resilience and ambition • Daily actions turn into lasting achievements • Loyalty rewarded with exclusive offers • Community-driven success, shared by friends • Smart investments, steady rewards • Over ten years of reliability and growth • Seasonal promotions bring fresh opportunities • Active members enjoy consistent bonuses • Trust built through a decade of service • MetaEarn empowers everyday earners • Keep winning with every click • Exclusive gifts for loyal members • Growth, resilience, and opportunity combined • A lifestyle of consistency and celebration • MetaEarn: more than income, it’s empowerment • Every invitation unlocks new rewards • A trusted journey since 2013 • Keep earning, keep achieving • Promotions that energize every season • Bonuses that recognize your effort • MetaEarn stands for trust and growth • Daily income, consistent rewards • Smart choices, steady wins • Keep earning, keep winning;
+MetaEarn — founded in 2013, empowering users with daily income opportunities • Invest smart, earn consistently • Invite friends and unlock exclusive gifts • Bonuses up to 20% for active members • Special offers and promotions every season • MetaEarn history: over a decade of trust and growth • Keep earning, keep winning • A platform built on resilience and ambition • Daily actions turn into lasting achievements • Loyalty rewarded with exclusive offers • Community-driven success, shared by friends • Smart investments, steady rewards • Over ten years of reliability and growth • Seasonal promotions bring fresh opportunities • Active members enjoy consistent bonuses • Trust built through a decade of service • MetaEarn empowers everyday earners • Keep winning with every click • Exclusive gifts for loyal members • Growth, resilience, and opportunity combined • A lifestyle of consistency and celebration • MetaEarn: more than income, it’s empowerment • Every invitation unlocks new rewards • A trusted journey since 2013 • Keep earning, keep achieving • Promotions that energize every season • Bonuses that recognize your effort • MetaEarn stands for trust and growth • Daily income, consistent rewards • Smart choices, steady wins • Keep earning, keep winning...
+
     </div>
   </div>
 
