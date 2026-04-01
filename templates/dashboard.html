@@ -1,149 +1,291 @@
-<!-- templates/dashboard.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>MetaEarn | Dashboard</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
   <style>
     body {
-      background: linear-gradient(135deg, #4285f4, #34a853, #fbbc05, #ea4335);
-      background-size: 400% 400%;
-      animation: gradientBG 15s ease infinite;
+      background: #111;
       font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding-bottom: 90px; /* space for fixed footer + nav */
+      overflow-y: auto; /* allow vertical scrolling */
+    }
+    /* Top bar */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      background: #222;
       color: #fff;
-      min-height: 100vh;
-      overflow-y: scroll;
     }
-    @keyframes gradientBG {
-      0% {background-position: 0% 50%;}
-      50% {background-position: 100% 50%;}
-      100% {background-position: 0% 50%;}
-    }
-    .section {
-      background-color: rgba(0,0,0,0.5);
-      border-radius: 15px;
-      padding: 20px;
-      margin: 20px 0;
-    }
-    .task-card {
-      background-color: rgba(255,255,255,0.1);
+    .top-bar img.logo { height: 40px; margin-right: 10px; }
+    .balance { font-weight: bold; }
+    .balance i { cursor: pointer; margin-left: 5px; }
+    /* Banner section */
+    .banner-section img {
       border-radius: 12px;
-      padding: 15px;
-      margin-bottom: 15px;
-      transition: transform 0.2s;
+      height: 150px;
+      object-fit: cover;
+      margin: 5px 0;
+      width: 100%;
     }
-    .task-card:hover {
-      transform: scale(1.03);
-      background-color: rgba(255,255,255,0.2);
+    /* Announcements ticker */
+    .ticker {
+      background: #333; color: #fff; padding: 8px;
+      display: flex; align-items: center; overflow: hidden; white-space: nowrap;
     }
+    .ticker i { margin-right: 10px; }
+    .ticker-text { display: inline-block; animation: scrollText 25s linear infinite; }
+    @keyframes scrollText { 0%{transform:translateX(100%);}100%{transform:translateX(-100%);} }
+    /* Hero banners */
+    .hero-banner {
+      background: linear-gradient(135deg,#ff9800,#f44336,#4caf50,#2196f3);
+      background-size: 400% 400%; animation: glowBG 10s ease infinite;
+      color:#fff; padding:20px; text-align:center; border-radius:12px; margin:10px;
+      box-shadow:0 0 20px rgba(255,255,255,0.7);
+    }
+    @keyframes glowBG {0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;}}
+    /* Icon grid */
+    .icon-grid { display:flex; justify-content:space-around; margin:10px; }
+    .icon-box { text-align:center; flex:1; color:#fff; }
+    .icon-box i { font-size:28px; margin-bottom:5px; }
+    /* Product cards */
+    .product-card {
+      background:#222; border-radius:12px; padding:15px; margin:15px;
+      box-shadow:0 0 15px rgba(0,255,255,0.4); display:flex; align-items:center; color:#fff;
+      transition:transform 0.3s, box-shadow 0.3s;
+    }
+    .product-card:hover { transform:scale(1.03); box-shadow:0 0 25px rgba(255,255,0,0.7); }
+    .product-card img { width:60px; height:60px; margin-right:15px; border-radius:8px; object-fit:cover; }
+    .product-details { flex:1; }
+    /* Bottom nav + footer */
+    .bottom-nav {
+      position:fixed; bottom:40px; left:0; right:0; background:#000;
+      border-top:1px solid #444; display:flex; justify-content:space-around; padding:10px 0;
+    }
+    .bottom-nav a { text-align:center; color:#fff; text-decoration:none; flex:1; }
+    .bottom-nav i { display:block; font-size:20px; }
     footer {
-      background-color: rgba(0,0,0,0.6);
-      padding: 15px;
-      text-align: center;
-      color: #fff;
-      margin-top: 40px;
-    }
-    .whatsapp-float {
-      position: fixed;
-      width: 60px;
-      height: 60px;
-      bottom: 40px;
-      right: 40px;
-      background-color: #25d366;
-      color: #fff;
-      border-radius: 50px;
-      text-align: center;
-      font-size: 30px;
-      box-shadow: 2px 2px 3px #999;
-      z-index: 100;
-    }
-    .whatsapp-float i {
-      margin-top: 16px;
+      position:fixed; bottom:0; left:0; right:0; background:#222; color:#fff;
+      text-align:center; padding:8px; font-size:13px; z-index:100;
     }
   </style>
 </head>
 <body>
-  <div class="container mt-4">
-    <h2 class="text-center animate__animated animate__fadeInDown">
-      🌌 Welcome {{ user.email }}
-    </h2>
+  <!-- Top bar -->
+  <div class="top-bar">
+    <img src="/static/images/metarearnlogo.png" alt="MetaEarn Logo" class="logo">
+    <div class="balance">Balance: KSh{{ user.wallet_balance }} <i class="bi bi-eye-slash"></i></div>
+  </div>
 
-    <!-- Wallet Section -->
-    <div class="section">
-      <h3>💰 Wallet</h3>
-      <p><strong>Balance:</strong> ${{ "%.2f"|format(user.wallet_balance) }}</p>
-      <p><strong>Total Views:</strong> {{ user.total_views }}</p>
-      <p><strong>Total Earnings:</strong> ${{ "%.2f"|format(user.total_earnings) }}</p>
+  <!-- Banner section (PNG slots) -->
+  <div class="banner-section">
+    <img src="/static/images/banner1.png" alt="Banner 1">
+    <img src="/static/images/banner2.png" alt="Banner 2">
+    <img src="/static/images/banner3.png" alt="Banner 3">
+  </div>
+
+  <!-- Announcements ticker -->
+  <div class="ticker">
+    <i class="bi bi-mic-fill"></i>
+    <div class="ticker-text">
+      MetaEarn — founded in 2013, empowering users with daily income opportunities • Invest smart, earn consistently • Invite friends and unlock exclusive gifts • Bonuses up to 20% for active members • Special offers and promotions every season • MetaEarn history: over a decade of trust and growth • Keep earning, keep winning...
     </div>
+  </div>
 
-    <!-- Tasks Section -->
-    <div class="section">
-      <h3>📋 Tasks</h3>
-      <p>Complete tasks below to earn money. Upload proof when required.</p>
-
-      <!-- Example Task Card -->
-      <div class="task-card">
-        <h5>📢 Status Views Task</h5>
-        <p>Post our image as your WhatsApp status and upload proof of views.</p>
-        <p><strong>Reward:</strong> $0.025 per view</p>
-        <a href="/static/task_image.png" download class="btn btn-primary btn-sm mb-2">⬇️ Download Task Image</a>
-        <form method="POST" action="/upload_views" enctype="multipart/form-data">
-          <div class="mb-2">
-            <input type="number" name="views" class="form-control" placeholder="Enter Views Count" required>
-          </div>
-          <div class="mb-2">
-            <input type="file" name="proof" accept="image/png" class="form-control" required>
-          </div>
-          <button type="submit" class="btn btn-success w-100">Submit & Earn</button>
-        </form>
-      </div>
-
-      <!-- Add more task cards here -->
-      <div class="task-card">
-        <h5>🎥 Video Share Task</h5>
-        <p>Share our promotional video link and record the number of views.</p>
-        <p><strong>Reward:</strong> $0.05 per share</p>
-        <button class="btn btn-info btn-sm">Get Video Link</button>
-      </div>
-
-      <div class="task-card">
-        <h5>📝 Survey Task</h5>
-        <p>Complete a short survey to help us improve MetaEarn.</p>
-        <p><strong>Reward:</strong> $1.00 per survey</p>
-        <button class="btn btn-warning btn-sm">Start Survey</button>
-      </div>
+  <!-- Jackpot Banner Carousel -->
+<div id="jackpotCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="3000">
+  <div class="carousel-inner text-center">
+    <!-- Jackpot Banner -->
+    <div class="carousel-item active">
+      <img src="/static/images/jackpot_banner.png" class="banner-img" alt="Jackpot Banner">
     </div>
-
-    <!-- Rewards Section -->
-    <div class="section">
-      <h3>🏆 Rewards</h3>
-      <ul>
-        <li>Bonus wallet credit after 500 views</li>
-        <li>Exclusive badge after $50 earned</li>
-        <li>Priority support after $100 earned</li>
-      </ul>
+    <!-- Invite Friends Banner -->
+    <div class="carousel-item">
+      <img src="/static/images/invite_banner.png" class="banner-img" alt="Invite Friends Banner">
     </div>
-
-    <!-- Profile Section -->
-    <div class="section">
-      <h3>👤 Profile</h3>
-      <p><strong>Email:</strong> {{ user.email }}</p>
-      <a href="/logout" class="btn btn-danger">Logout</a>
+    <!-- Welcome Banner -->
+    <div class="carousel-item">
+      <img src="/static/images/welcome_banner.png" class="banner-img" alt="Welcome Banner">
     </div>
+  </div>
+
+  <!-- Carousel Indicators -->
+  <div class="carousel-indicators">
+    <button type="button" data-bs-target="#jackpotCarousel" data-bs-slide-to="0" class="active" aria-current="true"></button>
+    <button type="button" data-bs-target="#jackpotCarousel" data-bs-slide-to="1"></button>
+    <button type="button" data-bs-target="#jackpotCarousel" data-bs-slide-to="2"></button>
+  </div>
+</div>
+
+  <!-- Invite Banner -->
+  <div class="hero-banner">
+    <strong>Invite new people and get gifts!</strong>
+  </div>
+
+  <!-- Icon Grid -->
+  <div class="icon-grid">
+    <div class="icon-box"><i class="bi bi-wallet-fill"></i><p>Recharge</p></div>
+    <div class="icon-box"><i class="bi bi-cash-coin"></i><p>Withdraw</p></div>
+    <div class="icon-box"><i class="bi bi-bank2"></i><p>Bank</p></div>
+    <div class="icon-box"><i class="bi bi-calendar-event-fill"></i><p>Check in</p></div>
+    <div class="icon-box"><i class="bi bi-list-check"></i><p>Task</p></div>
+  </div>
+
+    <!-- Product Section -->
+  <h4 class="text-white mb-3 ms-3">Product List</h4>
+
+  <!-- Product cards -->
+  <div class="product-card">
+  <img src="/static/images/intern.png" alt="MetaEarn Intern" style="width:25%; height:auto; border-radius:8px; object-fit:cover; margin-right:15px;">
+  <div class="product-details" style="padding-left:10px;">
+    <h5>MetaEarn Intern</h5>
+    <p>Price: KSh250</p>
+    <p>Income: KSh50/day</p>
+    <p>Period: 8 days</p>
+    <p>Upline: 25</p>
+    <button class="btn btn-success w-100">Buy</button>
+  </div>
+</div>
+
+  <div class="product-card">
+  <img src="/static/images/metearn1.png" alt="MetaEarn 1" style="width:25%; height:auto; border-radius:8px; object-fit:cover; margin-right:15px;">
+  <div class="product-details" style="padding-left:10px;">
+    <h5>MetaEarn 1</h5>
+    <p>Price: KSh900</p>
+    <p>Income: KSh100/day</p>
+    <p>Period: 25 days</p>
+    <p>Upline: 81</p>
+    <button class="btn btn-success w-100">Buy</button>
+  </div>
+</div>
+
+<div class="product-card">
+  <img src="/static/images/metearn2.png" alt="MetaEarn 2" style="width:25%; height:auto; border-radius:8px; object-fit:cover; margin-right:15px;">
+  <div class="product-details" style="padding-left:10px;">
+    <h5>MetaEarn 2</h5>
+    <p>Price: KSh2200</p>
+    <p>Income: KSh200/day</p>
+    <p>Period: 30 days</p>
+    <p>Upline: 176</p>
+    <button class="btn btn-success w-100">Buy</button>
+  </div>
+</div>
+
+<div class="product-card">
+  <img src="/static/images/metearn3.png" alt="MetaEarn 3" style="width:25%; height:auto; border-radius:8px; object-fit:cover; margin-right:15px;">
+  <div class="product-details" style="padding-left:10px;">
+    <h5>MetaEarn 3</h5>
+    <p>Price: KSh3500</p>
+    <p>Income: KSh301/day</p>
+    <p>Period: 40 days</p>
+    <p>Upline: 245</p>
+    <button class="btn btn-success w-100">Buy</button>
+  </div>
+</div>
+
+<div class="product-card">
+  <img src="/static/images/metearn4.png" alt="MetaEarn 4" style="width:25%; height:auto; border-radius:8px; object-fit:cover; margin-right:15px;">
+  <div class="product-details" style="padding-left:10px;">
+    <h5>MetaEarn 4</h5>
+    <p>Price: KSh5500</p>
+    <p>Income: KSh450/day</p>
+    <p>Period: 45 days</p>
+    <p>Upline: 355</p>
+    <button class="btn btn-success w-100">Buy</button>
+  </div>
+</div>
+
+<div class="product-card">
+  <img src="/static/images/metearn5.png" alt="MetaEarn 5" style="width:25%; height:auto; border-radius:8px; object-fit:cover; margin-right:15px;">
+  <div class="product-details" style="padding-left:10px;">
+    <h5>MetaEarn 5</h5>
+    <p>Price: KSh12000</p>
+    <p>Income: KSh1020/day</p>
+    <p>Period: 60 days</p>
+    <p>Upline: 875</p>
+    <button class="btn btn-success w-100">Buy</button>
+  </div>
+</div>
+
+  <div class="product-card">
+  <img src="/static/images/metearn6.png" alt="MetaEarn 6" style="width:25%; height:auto; border-radius:8px; object-fit:cover; margin-right:15px;">
+  <div class="product-details" style="padding-left:10px;">
+    <h5>MetaEarn 6</h5>
+    <p>Price: KSh21000</p>
+    <p>Income: KSh1890/day</p>
+    <p>Period: 90 days</p>
+    <p>Upline: 1260</p>
+    <button class="btn btn-success w-100">Buy</button>
+  </div>
+</div>
+
+<div class="product-card">
+  <img src="/static/images/metearn7.png" alt="MetaEarn 7" style="width:25%; height:auto; border-radius:8px; object-fit:cover; margin-right:15px;">
+  <div class="product-details" style="padding-left:10px;">
+    <h5>MetaEarn 7</h5>
+    <p>Price: KSh35000</p>
+    <p>Income: KSh3150/day</p>
+    <p>Period: 100 days</p>
+    <p>Upline: 1750</p>
+    <button class="btn btn-success w-100">Buy</button>
+  </div>
+</div>
+
+<div class="product-card">
+  <img src="/static/images/metearn8.png" alt="MetaEarn 8" style="width:25%; height:auto; border-radius:8px; object-fit:cover; margin-right:15px;">
+  <div class="product-details" style="padding-left:10px;">
+    <h5>MetaEarn 8</h5>
+    <p>Price: KSh49000</p>
+    <p>Income: KSh4410/day</p>
+    <p>Period: 120 days</p>
+    <p>Upline: 2450</p>
+    <button class="btn btn-success w-100">Buy</button>
+  </div>
+</div>
+
+<div class="product-card">
+  <img src="/static/images/metearn9.png" alt="MetaEarn 9" style="width:25%; height:auto; border-radius:8px; object-fit:cover; margin-right:15px;">
+  <div class="product-details" style="padding-left:10px;">
+    <h5>MetaEarn 9</h5>
+    <p>Price: KSh68000</p>
+    <p>Income: KSh6120/day</p>
+    <p>Period: 150 days</p>
+    <p>Upline: 4808</p>
+    <button class="btn btn-success w-100">Buy</button>
+  </div>
+</div>
+
+<div class="product-card">
+  <img src="/static/images/metearn10.png" alt="MetaEarn 10" style="width:25%; height:auto; border-radius:8px; object-fit:cover; margin-right:15px;">
+  <div class="product-details" style="padding-left:10px;">
+    <h5>MetaEarn 10</h5>
+    <p>Price: Coming Soon</p>
+    <p>Income: Coming Soon</p>
+    <p>Period: Coming Soon</p>
+    <p>Upline: Coming Soon</p>
+    <button class="btn btn-secondary w-100" disabled>Unavailable</button>
+  </div>
+</div>
+
+  </div>
+
+  <!-- Bottom Navigation -->
+  <div class="bottom-nav">
+    <a href="#"><i class="bi bi-house-fill"></i>Home</a>
+    <a href="#"><i class="bi bi-box-seam"></i>Product</a>
+    <a href="#"><i class="bi bi-bar-chart-fill"></i>Financial</a>
+    <a href="#"><i class="bi bi-people-fill"></i>Team</a>
+    <a href="#"><i class="bi bi-person-fill"></i>Mine</a>
   </div>
 
   <!-- Footer -->
   <footer>
-    <p>Need help? Contact us at: <strong>metarearn@gmail.com</strong> | <strong>support@metaearn.com</strong></p>
+    MetaEarn © 2013–2026 | Building trust and opportunities for over a decade. Contact us: <strong>metarearn@gmail.com</strong> | <strong>support@metaearn.com</strong>
   </footer>
-
-  <!-- Floating WhatsApp Button -->
-  <a href="https://wa.me/254792572591" class="whatsapp-float" target="_blank">
-    <i class="bi bi-whatsapp"></i>
-  </a>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
