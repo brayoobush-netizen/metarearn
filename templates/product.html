@@ -1,0 +1,659 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MetaEarn | Products</title>
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+  <style>
+    :root{
+      --header-h:64px;
+      --bottom-h:72px;
+      --bg:#0b1220;
+      --card:#0f1720;
+      --muted:#9aa0a6;
+      --accent:#00c27a;
+      --accent-2:#1fb6a8;
+      --content-pad:14px;
+    }
+
+    html,body{
+      height:100%;
+      margin:0;
+      background:linear-gradient(180deg,#071021,#0b1220);
+      color:#fff;
+      font-family:"Segoe UI",Roboto,system-ui,-apple-system,"Helvetica Neue",Arial;
+    }
+
+    /* Header */
+    .site-header{
+      position:fixed;
+      top:0;
+      left:0;
+      right:0;
+      height:var(--header-h);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:8px 16px;
+      background:rgba(6,10,14,0.85);
+      backdrop-filter:blur(4px);
+      border-bottom:1px solid rgba(255,255,255,0.03);
+      z-index:1000;
+    }
+    .logo{display:flex;align-items:center;gap:10px;}
+    .logo img{width:44px;height:44px;object-fit:contain;display:block;border-radius:8px;}
+    .brand-text{font-weight:800;font-size:1rem;color:#fff;letter-spacing:0.2px;}
+    .header-right{display:flex;align-items:center;gap:12px;}
+    .balance{background:linear-gradient(90deg,#042018,#073022);padding:8px 12px;border-radius:10px;font-weight:700;color:var(--accent);box-shadow:0 2px 8px rgba(0,0,0,0.6);}
+
+    /* Main scroll area */
+    .main{
+      position:absolute;
+      top:var(--header-h);
+      bottom:var(--bottom-h);
+      left:0;
+      right:0;
+      overflow-y:auto;
+      -webkit-overflow-scrolling:touch;
+      padding:var(--content-pad);
+    }
+
+    /* Page title */
+    .page-title{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:12px;
+    }
+    .page-title h1{margin:0;font-size:1.25rem;color:#fff;letter-spacing:0.3px;}
+    .page-title .subtitle{color:var(--muted);font-size:13px;}
+
+    /* Green summary card */
+    .green-card{
+      background:linear-gradient(180deg,#0fa86a,#0b7a4f);
+      border-radius:12px;
+      padding:78px;
+      color:#fff;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      box-shadow:0 20px 30px rgba(11,122,79,0.12);
+      margin-bottom:40px;
+      gap:8px;
+    }
+    .green-left{display:flex;align-items:center;gap:12px;min-width:0;}
+    .green-left .emojis{font-size:28px;}
+    .green-left .text .title{font-weight:800;font-size:1.05rem;margin:0;color:#fff;}
+    .green-left .text .muted{font-size:13px;color:rgba(255,255,255,0.95);opacity:0.95;margin-top:2px;}
+    .green-right{text-align:right;min-width:160px;}
+    .green-right .big{font-weight:900;font-size:1.25rem;color:#fff;}
+    .green-right .small{font-size:12px;color:rgba(255,255,255,0.95);opacity:0.95;}
+
+    @media (max-width:640px){
+      .green-right{display:none;}
+      .green-card{flex-direction:column;align-items:flex-start;}
+    }
+
+    /* Action icons below green card (now buttons, not links) */
+    .green-actions{
+      display:flex;
+      gap:12px;
+      margin-bottom:12px;
+    }
+    .green-action{
+      flex:1;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      background:linear-gradient(90deg,rgba(255,255,255,0.03),rgba(255,255,255,0.02));
+      padding:10px 12px;
+      border-radius:10px;
+      color:#fff;
+      text-decoration:none;
+      border:1px solid rgba(255,255,255,0.03);
+      cursor:pointer;
+      transition:transform .12s,box-shadow .12s;
+    }
+    .green-action:hover{transform:translateY(-4px);box-shadow:0 10px 24px rgba(0,0,0,0.35);}
+    .green-action i{font-size:22px;color:#fff;background:rgba(0,0,0,0.06);padding:8px;border-radius:8px;}
+    .green-action .label{font-weight:700;}
+
+    /* Products list */
+    .products{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-top:12px;}
+    .product-card{
+      background:linear-gradient(180deg,#0f1720,#0b1116);
+      border-radius:12px;
+      padding:12px;
+      display:flex;
+      gap:20px;
+      align-items:center;
+      box-shadow:0 8px 24px rgba(0,0,0,0.6);
+      transition:transform .16s,box-shadow .16s;
+      border:1px solid rgba(255,255,255,0.02);
+    }
+    .product-card:hover{transform:translateY(-6px);box-shadow:0 22px 44px rgba(0,0,0,0.7);}
+    .product-card img{width:96px;height:96px;border-radius:10px;object-fit:cover;flex-shrink:0;border:1px solid rgba(255,255,255,0.03);}
+    .product-details h5{margin:0 0 6px 0;font-size:1rem;color:#fff;}
+    .product-details p{margin:0;color:var(--muted);font-size:13px;}
+    .product-meta{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;}
+    .meta-pill{background:rgba(255,255,255,0.03);padding:6px 8px;border-radius:8px;font-size:12px;color:var(--muted);}
+
+    .product-actions{margin-top:10px;display:flex;gap:8px;}
+    .btn-buy{background:linear-gradient(90deg,var(--accent),var(--accent-2));border:none;color:#042018;font-weight:800;}
+    .btn-details{border:1px solid rgba(255,255,255,0.06);color:#fff;background:transparent;}
+
+    /* Empty state card */
+    .empty-card{
+      background:linear-gradient(180deg,#111827,#0b1220);
+      border-radius:12px;
+      padding:20px;
+      text-align:center;
+      color:var(--muted);
+      border:1px dashed rgba(255,255,255,0.04);
+    }
+
+    /* Bottom nav */
+    .bottom-nav{
+      position:fixed;
+      left:0;
+      right:0;
+      bottom:0;
+      height:var(--bottom-h);
+      display:flex;
+      justify-content:space-around;
+      align-items:center;
+      background:rgba(6,8,10,0.98);
+      border-top:1px solid rgba(255,255,255,0.03);
+      z-index:1000;
+      padding:8px 0;
+    }
+    .bottom-nav a{color:#cfd6da;text-decoration:none;font-size:12px;display:inline-flex;flex-direction:column;align-items:center;gap:4px;}
+    .bottom-nav i{font-size:20px;color:#fff;}
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="site-header">
+    <div class="logo">
+      <a href="{{ url_for('home') }}">
+        <img src="{{ url_for('static', filename='images/metarearnlogo.png') }}" alt="MetaEarn logo">
+      </a>
+      <div class="brand-text">MetaEarn</div>
+    </div>
+
+    <div class="header-right">
+      <div class="balance">{{ available_balance or "KSh0.00" }}</div>
+      <div>
+        <form action="{{ url_for('logout') }}" method="post" style="display:inline;">
+          <button type="submit" class="btn btn-link p-0 text-light" title="Logout" aria-label="Logout">
+            <i class="bi bi-box-arrow-right" style="font-size:20px;"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main content -->
+  <main class="main" role="main">
+    <div class="page-title">
+      <div>
+        <h1>MY PRODUCT</h1>
+        <div class="subtitle">Packages you purchased (only visible if you bought them)</div>
+      </div>
+      <div class="subtitle">Last updated: {{ last_updated or "—" }}</div>
+    </div>
+
+    <!-- Green Summary Card (drop-in) -->
+<section class="gc-card" role="region" aria-label="Portfolio summary: today's income and active investments">
+  <div class="gc-left">
+    <div class="gc-emoji" aria-hidden="true">🎯 💚 🚀</div>
+    <div class="gc-text">
+      <div class="gc-title">Portfolio Summary</div>
+      <div class="gc-sub">Today's income and active investments</div>
+    </div>
+  </div>
+
+  <div class="gc-right" aria-live="polite" aria-atomic="true">
+    <div class="gc-row">
+      <div class="gc-label">Accumulated income</div>
+      <div class="gc-value" id="accumulatedIncome" data-value="{{ accumulated_income }}">KSh&nbsp;—</div>
+    </div>
+
+    <div class="gc-row">
+      <div class="gc-label">Today's income</div>
+      <div class="gc-value" id="todaysIncome" data-value="{{ todays_income }}">KSh&nbsp;—</div>
+    </div>
+
+    <div class="gc-row">
+      <div class="gc-label">Active investments</div>
+      <div class="gc-value" id="numInvestments" data-value="{{ total_investments }}">—</div>
+    </div>
+  </div>
+</section>
+
+<style>
+:root{
+  --gc-bg:#0f7a4a;
+  --gc-accent:#fff59d;
+  --gc-text:#ffffff;
+  --gc-muted:rgba(255,255,255,0.9);
+  --gc-radius:12px;
+  --gc-gap:14px;
+  --gc-shadow:0 6px 18px rgba(6,40,20,0.25);
+  --gc-font-sans:system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+
+/* Card layout */
+.gc-card{
+  display:flex;
+  gap:var(--gc-gap);
+  align-items:center;
+  justify-content:space-between;
+  background:linear-gradient(180deg,var(--gc-bg),#0b5f3a);
+  color:var(--gc-text);
+  padding:18px;
+  border-radius:var(--gc-radius);
+  box-shadow:var(--gc-shadow);
+  font-family:var(--gc-font-sans);
+  min-width:260px;
+}
+
+/* Left column */
+.gc-left{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  flex:1 1 auto;
+  min-width:0;
+}
+.gc-emoji{ font-size:1.6rem; line-height:1; }
+.gc-title{ font-weight:700; font-size:1.05rem; }
+.gc-sub{ font-size:0.85rem; color:rgba(255,255,255,0.85); }
+
+/* Right column */
+.gc-right{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  align-items:flex-end;
+  min-width:160px;
+}
+
+/* Row */
+.gc-row{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  width:100%;
+}
+.gc-label{ font-weight:700; color:var(--gc-muted); font-size:0.85rem; white-space:nowrap; }
+.gc-value{
+  font-weight:900;
+  color:var(--gc-accent);
+  font-size:1.05rem;
+  min-width:90px;
+  text-align:right;
+}
+
+/* Skeleton state (when value is empty or "—") */
+.gc-value:empty,
+.gc-value:contains("—"){
+  background:linear-gradient(90deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  border-radius:6px;
+  height:1.2em;
+  width:100%;
+  display:inline-block;
+  padding:6px 8px;
+  color:transparent;
+}
+
+/* Responsive */
+@media (max-width:640px){
+  .gc-card{ flex-direction:column; align-items:stretch; }
+  .gc-right{ align-items:stretch; }
+  .gc-row{ justify-content:space-between; }
+  .gc-value{ text-align:right; min-width:0; }
+}
+
+/* Focus styles for keyboard users */
+.gc-card:focus-within{ outline:3px solid rgba(255,255,255,0.08); }
+</style>
+
+<script>
+/*
+  Hydration script: formats and injects values.
+  - Expects numeric values in data-value attributes (server or client).
+  - Falls back to 0 / 0.00 / 0 if missing.
+  - Formats currency for en-KE locale with "KSh" prefix.
+*/
+(function(){
+  const formatCurrency = (num) => {
+    const n = Number(num);
+    if (!isFinite(n)) return 'KSh 0.00';
+    // Use Intl.NumberFormat for locale-aware formatting
+    const fmt = new Intl.NumberFormat('en-KE', {
+      style: 'currency',
+      currency: 'KES',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+    // Intl prints "KES" by default; replace with "KSh" prefix
+    return fmt.format(n).replace(/^KES/, 'KSh');
+  };
+
+  const setValue = (id, fallback, isInteger=false) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const raw = el.getAttribute('data-value');
+    if (raw === null || raw === '' || raw === 'None' || raw === undefined) {
+      el.textContent = fallback;
+      return;
+    }
+    // If server already rendered a formatted string, keep it
+    if (/KSh|KES|[^\d.,\s]/.test(raw)) {
+      el.textContent = raw;
+      return;
+    }
+    const num = Number(raw);
+    if (!isFinite(num)) {
+      el.textContent = fallback;
+      return;
+    }
+    el.textContent = isInteger ? String(Math.round(num)) : formatCurrency(num);
+  };
+
+  // Populate fields
+  setValue('accumulatedIncome', 'KSh 0.00', false);
+  setValue('todaysIncome', 'KSh 0.00', false);
+  setValue('numInvestments', '0', true);
+
+  // Optional: expose a small API for dynamic updates
+  window.GC = {
+    update(values = {}) {
+      if ('accumulated_income' in values) {
+        document.getElementById('accumulatedIncome').setAttribute('data-value', values.accumulated_income);
+        setValue('accumulatedIncome', 'KSh 0.00', false);
+      }
+      if ('todays_income' in values) {
+        document.getElementById('todaysIncome').setAttribute('data-value', values.todays_income);
+        setValue('todaysIncome', 'KSh 0.00', false);
+      }
+      if ('total_investments' in values) {
+        document.getElementById('numInvestments').setAttribute('data-value', values.total_investments);
+        setValue('numInvestments', '0', true);
+      }
+    }
+  };
+})();
+</script>
+
+    <!-- Action buttons (no server routes required) -->
+    <div class="green-actions" role="group" aria-label="Quick actions">
+      <!-- Buttons open modals or trigger client-side handlers; no url_for used -->
+      <button type="button" class="green-action" id="btnRecharge" data-action="recharge" aria-label="Recharge">
+        <i class="bi bi-cash-stack" aria-hidden="true"></i>
+        <div class="label">Recharge</div>
+      </button>
+
+      <button type="button" class="green-action" id="btnWithdraw" data-action="withdraw" aria-label="Withdraw">
+        <i class="bi bi-wallet2" aria-hidden="true"></i>
+        <div class="label">Withdraw</div>
+      </button>
+
+      <button type="button" class="green-action" id="btnSummaryDetails" data-action="summary-details" aria-label="Details">
+        <i class="bi bi-info-circle-fill" aria-hidden="true"></i>
+        <div class="label">Details</div>
+      </button>
+    </div>
+
+    <!-- Purchases or empty state -->
+    {% if not purchases %}
+      <div class="empty-card" role="status" aria-live="polite">
+        <h3 style="margin-top:0;color:#fff;">No purchases yet</h3>
+        <p style="margin:8px 0 12px 0;">You haven't bought any packages. Visit <strong>Products</strong> to explore available packages and start investing.</p>
+        <!-- Use a button that navigates client-side to /product if you want, or opens product modal -->
+        <button type="button" class="btn btn-outline-light" id="btnBrowseProducts">Browse Packages</button>
+      </div>
+    {% else %}
+      <!-- Products grid: show only purchased packages -->
+      <section class="products" aria-label="My purchased products">
+        {% for p in purchases %}
+        <article class="product-card" role="article" aria-labelledby="prod-{{ loop.index }}">
+          <img src="{{ url_for('static', filename=p.image or 'images/metearn1.png') }}" alt="{{ p.name }}">
+          <div class="product-details" style="flex:1;">
+            <h5 id="prod-{{ loop.index }}">{{ p.name }}</h5>
+            <p>Price: <strong style="color:var(--accent)">{{ p.price }}</strong></p>
+            <p>Income: {{ p.income or '—' }}</p>
+            <p>Period: {{ p.period or '—' }}</p>
+            <p>Purchased: <small style="color:var(--muted)">{{ p.purchased_date or '—' }}</small></p>
+
+            <div class="product-meta">
+              <div class="meta-pill">Upline: {{ p.upline or '—' }}</div>
+              <div class="meta-pill">Status: {{ p.status or 'Active' }}</div>
+              <div class="meta-pill">Earned: KSh{{ p.earned | default('0.00') }}</div>
+            </div>
+
+            <div class="product-actions">
+              <!-- Buttons instead of url_for links. Data attributes carry product info for JS -->
+              <button type="button" class="btn btn-buy btn-sm w-50" data-action="reinvest" data-product-id="{{ p.id }}" data-product-name="{{ p.name }}">Reinvest</button>
+              <button type="button" class="btn btn-details btn-sm w-50" data-action="product-details" data-product-id="{{ p.id }}" data-product-name="{{ p.name }}">Details</button>
+            </div>
+          </div>
+        </article>
+        {% endfor %}
+      </section>
+    {% endif %}
+
+    <div style="height:12px;"></div>
+  </main>
+
+  <!-- Bottom navigation -->
+  <nav class="bottom-nav" role="navigation" aria-label="Bottom navigation">
+    <a href="{{ url_for('home') }}">
+      <i class="bi bi-house-fill" aria-hidden="true"></i>
+      <span>Home</span>
+    </a>
+
+    <!-- These are still links to product/financial pages; keep them if routes exist.
+         If you prefer buttons here too, replace with <button> and JS navigation. -->
+    <a href="{{ url_for('product') }}">
+      <i class="bi bi-box-seam" aria-hidden="true"></i>
+      <span>Products</span>
+    </a>
+
+    <a href="{{ url_for('financial') }}">
+      <i class="bi bi-bar-chart-fill" aria-hidden="true"></i>
+      <span>Financial</span>
+    </a>
+
+    <a href="{{ url_for('team') }}">
+      <i class="bi bi-people-fill" aria-hidden="true"></i>
+      <span>Team</span>
+    </a>
+
+    <a href="{{ url_for('mine') }}">
+      <i class="bi bi-person-fill" aria-hidden="true"></i>
+      <span>Mine</span>
+    </a>
+  </nav>
+
+  <!-- Modals (client-side handlers) -->
+  <!-- Generic action modal -->
+  <div class="modal fade" id="actionModal" tabindex="-1" aria-labelledby="actionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content text-dark">
+        <div class="modal-header">
+          <h5 class="modal-title" id="actionModalLabel">Action</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="actionModalBody">
+          <!-- Filled by JS -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary" id="actionModalConfirm">Proceed</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Product details modal -->
+  <div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content text-dark">
+        <div class="modal-header">
+          <h5 class="modal-title" id="productModalLabel">Product Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="productModalBody">
+          <!-- Filled by JS -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-buy" id="productModalBuy">Buy / Reinvest</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    // Helper: show action modal with title/body and callback for confirm
+    (function () {
+      const actionModalEl = document.getElementById('actionModal');
+      const actionModal = new bootstrap.Modal(actionModalEl);
+      const actionModalLabel = document.getElementById('actionModalLabel');
+      const actionModalBody = document.getElementById('actionModalBody');
+      const actionModalConfirm = document.getElementById('actionModalConfirm');
+
+      let currentConfirmHandler = null;
+
+      function openActionModal(title, bodyHtml, confirmHandler, confirmText = 'Proceed') {
+        actionModalLabel.textContent = title;
+        actionModalBody.innerHTML = bodyHtml;
+        actionModalConfirm.textContent = confirmText;
+        currentConfirmHandler = confirmHandler;
+        actionModal.show();
+      }
+
+      actionModalConfirm.addEventListener('click', function () {
+        if (typeof currentConfirmHandler === 'function') {
+          currentConfirmHandler();
+        }
+        actionModal.hide();
+      });
+
+      // Wire up top-level quick action buttons
+      document.getElementById('btnRecharge').addEventListener('click', function () {
+        openActionModal(
+          'Recharge',
+          '<p>Enter amount to recharge your wallet.</p>' +
+          '<div class="mb-3"><label class="form-label">Amount</label><input type="number" id="rechargeAmount" class="form-control" placeholder="e.g., 1000"></div>',
+          function () {
+            const amt = document.getElementById('rechargeAmount').value || 0;
+            // For now we just show a confirmation toast/alert. Replace with real request later.
+            alert('Recharge requested: KSh' + amt + '. (No server route required for this demo.)');
+          },
+          'Request Recharge'
+        );
+      });
+
+      document.getElementById('btnWithdraw').addEventListener('click', function () {
+        openActionModal(
+          'Withdraw',
+          '<p>Enter amount to withdraw from your wallet.</p>' +
+          '<div class="mb-3"><label class="form-label">Amount</label><input type="number" id="withdrawAmount" class="form-control" placeholder="e.g., 500"></div>',
+          function () {
+            const amt = document.getElementById('withdrawAmount').value || 0;
+            alert('Withdraw requested: KSh' + amt + '. (No server route required for this demo.)');
+          },
+          'Request Withdraw'
+        );
+      });
+
+      document.getElementById('btnSummaryDetails').addEventListener('click', function () {
+        openActionModal(
+          'Portfolio Details',
+          '<p><strong>Accumulated income:</strong> KSh{{ accumulated_income | default("0") }}</p>' +
+          '<p><strong>Today\'s income:</strong> KSh{{ todays_income | default("0.00") }}</p>' +
+          '<p><strong>Active investments:</strong> {{ total_investments | default(0) }}</p>',
+          function () {
+            // No-op or navigate if you later add a route
+            alert('Viewing portfolio details. (This is a client-side modal.)');
+          },
+          'OK'
+        );
+      });
+
+      // Browse products button (from empty state)
+      const browseBtn = document.getElementById('btnBrowseProducts');
+      if (browseBtn) {
+        browseBtn.addEventListener('click', function () {
+          // If you want to navigate to a products route later, change this to window.location = '/product';
+          alert('Open product catalog. (Replace with navigation when ready.)');
+        });
+      }
+
+      // Product-level buttons (delegation)
+      document.addEventListener('click', function (e) {
+        const target = e.target.closest('[data-action]');
+        if (!target) return;
+        const action = target.getAttribute('data-action');
+
+        // Reinvest / Buy button on product card
+        if (action === 'reinvest') {
+          const pid = target.getAttribute('data-product-id');
+          const pname = target.getAttribute('data-product-name') || 'Product';
+          openActionModal(
+            'Reinvest: ' + pname,
+            '<p>Confirm reinvestment into <strong>' + pname + '</strong> (ID: ' + pid + ').</p>' +
+            '<div class="mb-3"><label class="form-label">Amount</label><input type="number" id="reinvestAmount" class="form-control" placeholder="e.g., 1000"></div>',
+            function () {
+              const amt = document.getElementById('reinvestAmount').value || 0;
+              alert('Reinvest requested: KSh' + amt + ' into ' + pname + '. (Client-side demo.)');
+            },
+            'Reinvest'
+          );
+        }
+
+        // Product details button
+        if (action === 'product-details') {
+          const pid = target.getAttribute('data-product-id');
+          const pname = target.getAttribute('data-product-name') || 'Product';
+          const productModalEl = document.getElementById('productModal');
+          const productModal = new bootstrap.Modal(productModalEl);
+          const productModalLabel = document.getElementById('productModalLabel');
+          const productModalBody = document.getElementById('productModalBody');
+          const productModalBuy = document.getElementById('productModalBuy');
+
+          productModalLabel.textContent = pname;
+          // Fill with product info from template variables if available; otherwise show placeholders
+          productModalBody.innerHTML = `
+            <p><strong>Product ID:</strong> ${pid}</p>
+            <p><strong>Name:</strong> ${pname}</p>
+            <p><strong>Price:</strong> ${target.closest('.product-card').querySelector('strong')?.textContent || '—'}</p>
+            <p style="margin-top:8px;color:#666;">This modal is client-side. Replace with server details when ready.</p>
+          `;
+
+          productModalBuy.onclick = function () {
+            productModal.hide();
+            alert('Buy / Reinvest clicked for ' + pname + ' (ID: ' + pid + ').');
+          };
+
+          productModal.show();
+        }
+      });
+
+    })();
+  </script>
+</body>
+</html>

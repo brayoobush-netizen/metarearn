@@ -1,11 +1,27 @@
+<!-- templates/home.html -->
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Home</title>
+  <meta charset="UTF-8">
+  <title>Redirecting...</title>
+  <!-- Redirect immediately to the dashboard -->
+  <meta http-equiv="refresh" content="0; url={{ url_for('dashboard') }}">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding-top: 50px;
+      color: #333;
+    }
+    a {
+      color: #0b8f4a;
+      text-decoration: none;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
-    <h1>Welcome to META EARN VIEWS</h1>
-    <a href="{{ url_for('register') }}">Register</a> |
-    <a href="{{ url_for('login') }}">Login</a>
+  <p>Redirecting to your dashboard...</p>
+  <p>If you are not redirected automatically, <a href="{{ url_for('dashboard') }}">click here</a>.</p>
 </body>
 </html>

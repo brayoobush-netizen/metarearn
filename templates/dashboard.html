@@ -83,13 +83,13 @@
     .product-details { flex:1; }
     /* Bottom nav + footer */
     .bottom-nav {
-      position:fixed; bottom:40px; left:0; right:0; background:#000;
-      border-top:1px solid #444; display:flex; justify-content:space-around; padding:10px 0;
+      position:fixed; bottom:0px; left:0; right:0; background:#000;
+      border-top:1px solid #444; display:flex; justify-content:fit; padding:0px 0;
     }
     .bottom-nav a { text-align:center; color:#fff; text-decoration:none; flex:1; }
     .bottom-nav i { display:block; font-size:20px; }
     footer {
-      position:fixed; bottom:0; left:0; right:0; background:#222; color:#fff;
+      position:fixed; bottom:50; left:0; right:0; background:#222; color:#fff;
       text-align:center; padding:8px; font-size:13px; z-index:100;
     }
   </style>
@@ -296,18 +296,34 @@ MetaEarn — founded in 2013, empowering users with daily income opportunities �
   </div>
 
   <!-- Bottom Navigation -->
-  <div class="bottom-nav">
-    <a href="#"><i class="bi bi-house-fill"></i>Home</a>
-    <a href="#"><i class="bi bi-box-seam"></i>Product</a>
-    <a href="#"><i class="bi bi-bar-chart-fill"></i>Financial</a>
-    <a href="#"><i class="bi bi-people-fill"></i>Team</a>
-    <a href="#"><i class="bi bi-person-fill"></i>Mine</a>
-  </div>
+  <nav class="bottom-nav" role="navigation" aria-label="Bottom navigation">
+    <a href="{{ url_for('home') }}">
+      <i class="bi bi-house-fill" aria-hidden="true"></i>
+      <span>Home</span>
+    </a>
 
-  <!-- Footer -->
-  <footer>
-    MetaEarn © 2013–2026 | Building trust and opportunities for over a decade. Contact us: <strong>metarearn@gmail.com</strong> | <strong>support@metaearn.com</strong>
-  </footer>
+    <a href="{{ url_for('product') }}">
+      <i class="bi bi-box-seam" aria-hidden="true"></i>
+      <span>Product</span>
+    </a>
+
+    <a href="{{ url_for('financial') }}">
+      <i class="bi bi-bar-chart-fill" aria-hidden="true"></i>
+      <span>Financial</span>
+    </a>
+
+    <a href="{{ url_for('team') }}">
+      <i class="bi bi-people-fill" aria-hidden="true"></i>
+      <span>Team</span>
+    </a>
+
+    <a href="{{ url_for('mine') }}">
+      <i class="bi bi-person-fill" aria-hidden="true"></i>
+      <span>Mine</span>
+    </a>
+  </nav>
+
+  <footer style="display:none;"></footer>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>

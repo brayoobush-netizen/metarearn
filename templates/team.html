@@ -1,0 +1,183 @@
+<!-- templates/team.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Team</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { 
+      font-family: 'Segoe UI', sans-serif; 
+      margin:0; padding:0; 
+      background:#f5f7fa; 
+      color:#333; 
+      line-height:1.6;
+    }
+
+    /* Top bar */
+    .top-bar { 
+      background:#0066cc; 
+      color:#fff; 
+      padding:20px; 
+      text-align:center; 
+      font-size:22px; 
+      font-weight:bold; 
+      letter-spacing:1px;
+      position:sticky; 
+      top:0; 
+      z-index:1000;
+    }
+
+    /* Card style */
+    .card { 
+      background:#fff; 
+      border-radius:12px; 
+      padding:20px; 
+      margin:25px 20px; 
+      box-shadow:0 4px 12px rgba(0,0,0,0.08);
+    }
+    .card h3 { margin:0 0 15px; font-size:18px; color:#0066cc; }
+    .card p { margin:10px 0; }
+
+    /* Colored block header for summary */
+    .summary-header {
+      background:linear-gradient(135deg, #00c6ff, #0072ff);
+      color:#fff;
+      padding:15px;
+      border-radius:8px;
+      font-size:18px;
+      font-weight:bold;
+      text-align:center;
+      margin-bottom:15px;
+    }
+
+    /* Team levels with vertical lines */
+    .team-info {
+      position:relative;
+      padding-left:30px;
+    }
+    .team-info::before {
+      content:"";
+      position:absolute;
+      left:15px;
+      top:0;
+      bottom:0;
+      width:2px;
+      background:#ccc;
+    }
+    .team-level { 
+      display:flex; 
+      justify-content:space-between; 
+      align-items:center;
+      padding:14px 0; 
+      position:relative;
+    }
+    .team-level span { font-size:15px; }
+    .team-level button {
+      background:#0066cc;
+      color:#fff;
+      border:none;
+      padding:6px 12px;
+      border-radius:6px;
+      cursor:pointer;
+      font-size:13px;
+      transition:0.3s;
+    }
+    .team-level button:hover { background:#004999; }
+
+    /* Invitation section */
+    .invite p { margin:14px 0; }
+    .invite button { 
+      background:#28a745; 
+      color:#fff; 
+      border:none; 
+      padding:8px 16px; 
+      cursor:pointer; 
+      border-radius:6px; 
+      font-size:14px; 
+      transition:0.3s;
+    }
+    .invite button:hover { background:#218838; }
+
+    /* Rule section */
+    .rule { font-size:14px; color:#555; }
+
+    /* Bottom navigation */
+    .bottom-nav { 
+      position:fixed; bottom:0; left:0; right:0; 
+      display:flex; 
+      background:#fff; 
+      border-top:1px solid #ddd; 
+      box-shadow:0 -2px 6px rgba(0,0,0,0.05);
+    }
+    .bottom-nav a { 
+      flex:1; 
+      text-align:center; 
+      padding:14px 0; 
+      text-decoration:none; 
+      color:#0066cc; 
+      font-size:15px; 
+      font-weight:500;
+      transition:0.3s;
+    }
+    .bottom-nav a:hover { background:#f0f0f0; }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">Team Dashboard</div>
+
+  <!-- Summary -->
+  <div class="card">
+    <div class="summary-header">📊 Team Summary</div>
+    <p>Total investment: <b>KSh0</b></p>
+    <p>Total people: <b>0</b></p>
+    <p>Total rebate: <b>KSh0</b></p>
+  </div>
+
+  <!-- Team Information -->
+  <div class="card team-info">
+    <h3>Team Information</h3>
+    <div class="team-level">
+      <span>🥇 Lv1. (Rebate: 9%)</span>
+      <span>KSh0 Rebate | 0 People</span>
+      <button>View Lv1</button>
+    </div>
+    <div class="team-level">
+      <span>🥈 Lv2. (Rebate: 2%)</span>
+      <span>KSh0 Rebate | 0 People</span>
+      <button>View Lv2</button>
+    </div>
+    <div class="team-level">
+      <span>🥉 Lv3. (Rebate: 1%)</span>
+      <span>KSh0 Rebate | 0 People</span>
+      <button>View Lv3</button>
+    </div>
+  </div>
+
+  <!-- Invitation -->
+  <div class="card invite">
+    <h3>Invite Friends 🚀</h3>
+    <p>🔑 Invitation code: <b>589sy71656</b> <button>Copy</button></p>
+    <p>🔗 Invitation link:<br>
+      <small>https://leas.com.solsamrt.lat/tid?code=589sy71656</small>
+      <button>Copy</button>
+    </p>
+  </div>
+
+  <!-- Rule -->
+  <div class="card rule">
+    <p>💡 Invite your friends to register and join us. You’ll earn <b>9% + 2% + 1%</b> cashback from your team’s investments.</p>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <div class="bottom-nav">
+    <a href="{{ url_for('landing') }}">🏠 Home</a>
+    <a href="{{ url_for('product') }}">📦 Product</a>
+    <a href="{{ url_for('financial') }}">💰 Financial</a>
+    <a href="{{ url_for('team') }}">👥 Team</a>
+    <a href="{{ url_for('mine') }}">⚡ Mine</a>
+  </div>
+
+</body>
+</html>
