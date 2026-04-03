@@ -101,14 +101,35 @@
     </main>
   </div>
 
-  <nav class="bottom-nav">
-    <a href="{{ url_for('dashboard') }}" class="{% if request.endpoint == 'dashboard' %}active{% endif %}"><i class="bi bi-house-fill"></i>Home</a>
-    <a href="{{ url_for('product') }}" class="{% if request.endpoint == 'product' %}active{% endif %}"><i class="bi bi-box-seam"></i>Product</a>
-    <a href="{{ url_for('financial') }}" class="{% if request.endpoint == 'financial' %}active{% endif %}"><i class="bi bi-bar-chart-fill"></i>Financial</a>
-    <a href="{{ url_for('team') }}" class="{% if request.endpoint == 'team' %}active{% endif %}"><i class="bi bi-people-fill"></i>Team</a>
-    <a href="{{ url_for('mine') }}" class="{% if request.endpoint == 'mine' %}active{% endif %}"><i class="bi bi-person-fill"></i>Mine</a>
-  </nav>
+  <!-- Bottom navigation -->
+  <nav class="bottom-nav" role="navigation" aria-label="Bottom navigation">
+    <a href="{{ url_for('home') }}">
+      <i class="bi bi-house-fill" aria-hidden="true"></i>
+      <span>Home</span>
+    </a>
 
-  <footer>© 2026 leas.com.solsmart.lat</footer>
+    <!-- These are still links to product/financial pages; keep them if routes exist.
+         If you prefer buttons here too, replace with <button> and JS navigation. -->
+    <a href="{{ url_for('product') }}">
+      <i class="bi bi-box-seam" aria-hidden="true"></i>
+      <span>Products</span>
+    </a>
+
+    <a href="{{ url_for('financial') }}">
+      <i class="bi bi-bar-chart-fill" aria-hidden="true"></i>
+      <span>Financial</span>
+    </a>
+
+    <a href="{{ url_for('team') }}">
+      <i class="bi bi-people-fill" aria-hidden="true"></i>
+      <span>Team</span>
+    </a>
+
+    <a href="{{ url_for('mine') }}">
+      <i class="bi bi-person-fill" aria-hidden="true"></i>
+      <span>Mine</span>
+    </a>
+  </nav>
+  <footer>© 2026 metarearn.inc.finance</footer>
 </body>
 </html>

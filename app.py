@@ -24,12 +24,6 @@ app.secret_key = os.environ.get("SECRET_KEY", "dev_secret")
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///users.db")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-# Uploads folder for user images (profile proofs, PNGs you mentioned)
-UPLOAD_FOLDER = os.path.join(app.root_path, "uploads")
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-ALLOWED_IMAGE_EXT = (".png", ".jpg", ".jpeg", ".gif")
-
 # Initialize DB + migrations
 db.init_app(app)
 migrate = Migrate(app, db)
@@ -93,17 +87,6 @@ def landing():
             {% endif %}
         """, logged_in=bool(session.get("user_id")))
 
-@app.route("/home")
-def home():
-    """
-    Home route used by navigation:
-    - If logged in -> dashboard
-    - If not -> landing
-    """
-    if session.get("user_id"):
-        return redirect(url_for("dashboard"))
-    return redirect(url_for("landing"))
-
 # -------------------------
 # Static-like pages
 # -------------------------
@@ -135,6 +118,21 @@ def financial():
 @app.route("/team")
 def team():
     return render_template("team.html")
+@app.route("/home")
+def home():
+    """
+    Home route used by navigation:
+    - If logged in -> dashboard
+    - If not -> landing
+    """
+    if session.get("user_id"):
+        return redirect(url_for("dashboard"))
+    return redirect(url_for("landing"))
+
+@app.route('/recharge')
+def recharge():
+    # Do something here, e.g. render a recharge page
+    return render_template('recharge.html')
 
 # -------------------------
 # Authentication: Register / Verify / Login / Logout
@@ -304,35 +302,6 @@ def dashboard():
             <p>Check server console for full traceback.</p>
         """, err=str(e)), 500
 
-@app.route("/upload_views", methods=["POST"])
-@login_required()
-def upload_views():
-    user = get_current_user()
-    if not user:
-        flash("User not found. Please log in again.", "error")
-        return redirect(url_for("login"))
-
-    try:
-        views = int(request.form.get("views", 0))
-    except Exception:
-        flash("Invalid views value.", "error")
-        return redirect(url_for("dashboard"))
-
-    earnings = views * 0.025
-    user.total_views = getattr(user, "total_views", 0) + views
-    user.total_earnings = getattr(user, "total_earnings", 0.0) + earnings
-    user.wallet_balance = getattr(user, "wallet_balance", 0.0) + earnings
-    db.session.commit()
-
-    if "proof" in request.files:
-        file = request.files["proof"]
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
-
-    flash(f"{views} views recorded. KSh{earnings:.2f} added to your wallet.", "success")
-    return redirect(url_for("dashboard"))
-
 # -------------------------
 # Mine page (balances)
 # -------------------------
@@ -347,13 +316,6 @@ def mine():
         "user": user
     }
     return render_template("mine.html", **context)
-
-# -------------------------
-# Serve uploaded files
-# -------------------------
-@app.route("/uploads/<path:filename>")
-def uploaded_file(filename):
-    return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
 
 # -------------------------
 # Error handlers

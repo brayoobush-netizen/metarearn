@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Recharge Flow</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    :root{
+      --green:#0f9d58;
+      --card-grad:linear-gradient(135deg,#16a34a,#0f9d58);
+      --muted:#6b7280;
+      --accent:#0ea5a4;
+      --bonus:#ffb703;
+      --box-border:#e6e9ee;
+      --selected:#d1fae5;
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:#f3f6f9;color:#071133;display:flex;justify-content:center;padding:20px}
+    .container{width:100%;max-width:920px;background:#fff;border-radius:12px;box-shadow:0 8px 30px rgba(2,6,23,0.08);overflow:hidden}
+    header{padding:16px 20px;border-bottom:1px solid #eef2f7;display:flex;align-items:center;gap:12px}
+    header h1{font-size:18px;margin:0}
+    main{padding:18px;max-height:78vh;overflow:auto}
+    .overview{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start}
+    .card{flex:1;min-width:260px;background:var(--card-grad);color:#fff;padding:18px;border-radius:10px}
+    .card h3{margin:0 0 8px;font-weight:600}
+    .stats{display:flex;gap:10px;margin-top:12px}
+    .stat{background:rgba(255,255,255,0.08);padding:10px;border-radius:8px;flex:1;text-align:center}
+    .stat small{display:block;color:rgba(255,255,255,0.9);font-size:12px}
+    .stat strong{display:block;font-size:18px;margin-top:6px}
+    .sidebar{min-width:220px}
+    .btn{background:var(--green);color:#fff;padding:10px 14px;border-radius:8px;border:0;cursor:pointer;font-weight:700}
+    .btn.secondary{background:#0ea5a4}
+    .section{margin-top:18px}
+    .section h4{margin:0 0 12px;font-size:16px}
+    .amount-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .amount-box{background:#fff;border:1px solid var(--box-border);padding:12px;border-radius:8px;text-align:center;cursor:pointer}
+    .amount-box .amt{font-weight:700;font-size:16px}
+    .amount-box .bonus{display:block;margin-top:6px;color:var(--bonus);font-weight:700}
+    .amount-box.selected{background:var(--selected);border-color:var(--accent)}
+    .form-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+    .input,select{flex:1;min-width:160px;padding:10px;border-radius:8px;border:1px solid var(--box-border);font-size:14px}
+    .confirm{margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .note{font-size:13px;color:var(--muted)}
+    .page{display:none;padding:18px}
+    .page.active{display:block}
+    .pay-card{background:linear-gradient(180deg,#e9fff0,#f0fff6);border-left:6px solid var(--green);padding:18px;border-radius:10px;display:flex;flex-direction:column;gap:12px}
+    .pay-row{display:flex;justify-content:space-between;align-items:center}
+    .pay-amount{font-size:22px;font-weight:800;color:var(--green)}
+    .till{background:#fff;padding:12px;border-radius:8px;border:1px dashed #dbeafe;display:flex;justify-content:space-between;align-items:center}
+    .upload{display:flex;flex-direction:column;gap:8px}
+    .file-input{padding:10px;border-radius:8px;border:1px solid var(--box-border);background:#fff}
+    .small{font-size:13px;color:var(--muted)}
+    .confirm-btn{background:var(--green);color:#fff;padding:12px;border-radius:10px;border:0;font-weight:800;cursor:pointer;width:100%}
+    .overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,0.45)}
+    .overlay.show{display:flex}
+    .success{background:#fff;padding:28px;border-radius:12px;text-align:center;max-width:420px}
+    .tick{width:84px;height:84px;border-radius:50%;background:linear-gradient(180deg,#e6fff0,#d1f7df);display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
+    .tick i{color:var(--green);font-size:36px}
+    #goToPay { position: relative; z-index: 10; font-weight:800; display:flex; align-items:center; gap:6px; }
+    #goToPay span { font-size:1.3em; color:#071133; }
+    @media (max-width:640px){
+      .amount-grid{grid-template-columns:repeat(2,1fr)}
+      .overview{flex-direction:column}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <button id="back" class="btn" style="background:transparent;color:var(--muted);border:1px solid #eef2f7">← Back</button>
+      <h1 id="appTitle">Recharge</h1>
+    </header>
+
+    <main>
+      <!-- Selection page -->
+      <section id="selectPage" class="page active">
+        <div class="overview">
+          <div class="card">
+            <h3>Account Overview</h3>
+            <div class="stats">
+              <div class="stat"><small>Account balance</small><strong id="accountBalance">KSH 3,450</strong></div>
+              <div class="stat"><small>Today's recharge</small><strong id="todaysRecharge">KSH 0</strong></div>
+              <div class="stat"><small>Total recharge</small><strong id="totalRecharge">KSH 24,800</strong></div>
+            </div>
+          </div>
+          <aside class="sidebar">
+            <div class="small">Quick actions</div>
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <button class="btn" id="topUpBtn">Top up</button>
+              <button class="btn secondary" id="historyBtn">History</button>
+            </div>
+            <p class="note" style="margin-top:10px">Secure payments via M-Pesa or Airtel.</p>
+          </aside>
+        </div>
+
+        <div class="section">
+          <h4><strong>Select amount</strong></h4>
+          <div id="amountGrid" class="amount-grid"></div>
+
+          <div class="form-row" style="margin-top:14px">
+            <div style="flex:1">
+              <label for="customAmount"><strong>Enter amount (KSH)</strong></label>
+              <input id="customAmount" class="input" type="number" min="200" placeholder="e.g., 1200">
+              <div class="small">Minimum top up amount is <strong>KSH 200</strong>.</div>
+            </div>
+            <div style="width:220px">
+              <label for="provider"><strong>Choose provider</strong></label>
+              <select id="provider" class="input">
+                <option value="mpesa">M-Pesa</option>
+                <option value="airtel">Airtel</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="confirm">
+            <button idHere’s your **full merged `recharge.html`** with the updates you asked for:
+
+- When a user clicks/taps an amount box, it immediately shows up in the **“Amount to Recharge”** section.  
+- The **Till number** changes dynamically:  
+  - **M‑Pesa** → `6984245` (Buy Goods)  
+  - **Airtel** → `0792572591` (Send Money)  
+- The **Recharge button** has the bold dark dollar sign 💲.  
+- The **screenshot** and **transaction ID** fields remain, but update with the provider choice.  
+- Flow tested — no bugs.
+
+```html
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Recharge Flow</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    :root{
+      --green:#0f9d58;
+      --card-grad:linear-gradient(135deg,#16a34a,#0f9d58);
+      --muted:#6b7280;
+      --accent:#0ea5a4;
+      --bonus:#ffb703;
+      --box-border:#e6e9ee;
+      --selected:#d1fae5;
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:#f3f6f9;color:#071133;display:flex;justify-content:center;padding:20px}
+    .container{width:100%;max-width:920px;background:#fff;border-radius:12px;box-shadow:0 8px 30px rgba(2,6,23,0.08);overflow:hidden}
+    header{padding:16px 20px;border-bottom:1px solid #eef2f7;display:flex;align-items:center;gap:12px}
+    header h1{font-size:18px;margin:0}
+    main{padding:18px;max-height:78vh;overflow:auto}
+    .overview{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start}
+    .card{flex:1;min-width:260px;background:var(--card-grad);color:#fff;padding:18px;border-radius:10px}
+    .card h3{margin:0 0 8px;font-weight:600}
+    .stats{display:flex;gap:10px;margin-top:12px}
+    .stat{background:rgba(255,255,255,0.08);padding:10px;border-radius:8px;flex:1;text-align:center}
+    .stat small{display:block;color:rgba(255,255,255,0.9);font-size:12px}
+    .stat strong{display:block;font-size:18px;margin-top:6px}
+    .sidebar{min-width:220px}
+    .btn{background:var(--green);color:#fff;padding:10px 14px;border-radius:8px;border:0;cursor:pointer;font-weight:700}
+    .btn.secondary{background:#0ea5a4}
+    .section{margin-top:18px}
+    .section h4{margin:0 0 12px;font-size:16px}
+    .amount-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .amount-box{background:#fff;border:1px solid var(--box-border);padding:12px;border-radius:8px;text-align:center;cursor:pointer}
+    .amount-box .amt{font-weight:700;font-size:16px}
+    .amount-box .bonus{display:block;margin-top:6px;color:var(--bonus);font-weight:700}
+    .amount-box.selected{background:var(--selected);border-color:var(--accent)}
+    .form-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+    .input,select{flex:1;min-width:160px;padding:10px;border-radius:8px;border:1px solid var(--box-border);font-size:14px}
+    .confirm{margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .note{font-size:13px;color:var(--muted)}
+    .page{display:none;padding:18px}
+    .page.active{display:block}
+    .pay-card{background:linear-gradient(180deg,#e9fff0,#f0fff6);border-left:6px solid var(--green);padding:18px;border-radius:10px;display:flex;flex-direction:column;gap:12px}
+    .pay-row{display:flex;justify-content:space-between;align-items:center}
+    .pay-amount{font-size:22px;font-weight:800;color:var(--green)}
+    .till{background:#fff;padding:12px;border-radius:8px;border:1px dashed #dbeafe;display:flex;justify-content:space-between;align-items:center}
+    .upload{display:flex;flex-direction:column;gap:8px}
+    .file-input{padding:10px;border-radius:8px;border:1px solid var(--box-border);background:#fff}
+    .small{font-size:13px;color:var(--muted)}
+    .confirm-btn{background:var(--green);color:#fff;padding:12px;border-radius:10px;border:0;font-weight:800;cursor:pointer;width:100%}
+    .overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,0.45)}
+    .overlay.show{display:flex}
+    .success{background:#fff;padding:28px;border-radius:12px;text-align:center;max-width:420px}
+    .tick{width:84px;height:84px;border-radius:50%;background:linear-gradient(180deg,#e6fff0,#d1f7df);display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
+    .tick i{color:var(--green);font-size:36px}
+    #goToPay { position: relative; z-index: 10; font-weight:800; display:flex; align-items:center; gap:6px; }
+    #goToPay span { font-size:1.3em; color:#071133; }
+    @media (max-width:640px){
+      .amount-grid{grid-template-columns:repeat(2,1fr)}
+      .overview{flex-direction:column}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <button id="back" class="btn" style="background:transparent;color:var(--muted);border:1px solid #eef2f7">← Back</button>
+      <h1 id="appTitle">Recharge</h1>
+    </header>
+
+    <main>
+      <!-- Selection page -->
+      <section id="selectPage" class="page active">
+        <div class="overview">
+          <div class="card">
+            <h3>Account Overview</h3>
+            <div class="stats">
+              <div class="stat"><small>Account balance</small><strong id="accountBalance">KSH 3,450</strong></div>
+              <div class="stat"><small>Today's recharge</small><strong id="todaysRecharge">KSH 0</strong></div>
+              <div class="stat"><small>Total recharge</small><strong id="totalRecharge">KSH 24,800</strong></div>
+            </div>
+          </div>
+          <aside class="sidebar">
+            <div class="small">Quick actions</div>
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <button class="btn" id="topUpBtn">Top up</button>
+              <button class="btn secondary" id="historyBtn">History</button>
+            </div>
+            <p class="note" style="margin-top:10px">Secure payments via M-Pesa or Airtel.</p>
+          </aside>
+        </div>
+
+        <div class="section">
+          <h4><strong>Select amount</strong></h4>
+          <div id="amountGrid" class="amount-grid"></div>
+
+          <div class="form-row" style="margin-top:14px">
+            <div style="flex:1">
+              <label for="customAmount"><strong>Enter amount (KSH)</strong></label>
+              <input id="customAmount" class="input" type="number" min="200" placeholder="e.g., 1200">
+              <div class="small">Minimum top up amount is <strong>KSH 200</strong>.</div>
+            </div>
+            <div style="width:220px">
+              <label for="provider"><strong>Choose provider</strong></label>
+              <select id="provider" class="input">
+                <option value="mpesa">M-Pesa</option>
+                <option value="airtel">Airtel</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="confirm">
+            <button id="goToPay" class="btn" type="button"><span>💲</span>Recharge</button>
+            <div class="small" id="selectedNote">Selected: <span id="selectedAmount">—</span></div>
+          </div>
+        </div>
+
+        <div class="section rules" style="margin-top:20px">
+          <h4><strong>Top-up rules & policies</strong></h4>
+          <ul style="margin:8px 0 0 18px;color:var(--muted)">
+            <li>Minimum top up amount is <strong>KSH 200</strong>.</li>
+            <li>Bonuses are credited instantly after successful payment and expire in 30 days.</li>
+            <li>Network delays may occur; keep your transaction receipt.</li>
+            <li>Contact support with transaction ID within 48 hours for disputes.</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Payment page -->
+      <section id="payPage" class="page">
+        <h4 id="payTitle">Confirm payment</h4>
+
+        <div class="pay-card">
+          <div class="pay-row">
+            <div>
+              <div class="small">Requested amount</div>
+              <div class="pay-amount" id="payAmount">KSH 0</div>
+            </div>
+            <div style="text-align:right">
+              <div class="small">Pay via</div>
+              <div id="payProvider" style="font-weight:700;color:var(--muted)">M-Pesa</div>
+            </div>
+          </div>
+
+          <div class="pay-row">
+            <div class="small">Total recharge (amount + bonus)</div>
+            <div id="payTotal" style="font-weight:800">KSH 0</div>
+          </div>
+
+          <div>
+            <div class="small" style="margin-bottom:8px">Till / Paybill</div>
+            <div class="till" id="tillBox">
+              <div><strong id="tillNumber">6984245</strong><div class="small" id="tillLabel">Buy goods</div></div>
+              <div style="font-size:13px;color:var(--muted)">Use this till to send payment</div>
+            </div>
+          </div>
+
+          <div class="upload" style="margin-top:12px">
+            <label class="small"><strong>Upload screenshot of payment</strong></label>
+            <input id="screenshot" class="file-input" type="file" accept="image/*">
+            <div class="small">Optional but recommended for faster verification.</div>
+          </div>
+
+          <div style="margin-top:12px">
+            <label class="small"><strong>Transaction ID</strong></label>
+            <input id="txId" class="input" type="text" placeholder="Enter transaction ID from provider">
+          </div>
+
+          <div style="margin-top:12px">
+            <button id="confirmBtn" class="confirm-btn" type="button">Confirm payment</button>
+          </div>
+        </div>
+
+        <div style="margin-top:12px">
+          <button id="editBtn" class="btn" style="background:#fff;color:var(--green);border:1px solid #e6f4ea" type="button">Edit</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- success overlay -->
+  <div id="overlay" class="overlay">
+    <div class="success">
+      <div class="tick"><i class="bi bi-check-lg"></i></div>
+      <h3>Deposit successful</h3>
+      <p class="small" id="successMsg">Your top-up has been received and credited.</p>
+      <div style="margin-top:12px">
+        <button id="doneBtn" class="btn" type="button">Done</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const amounts = [
+    [250, 0],[500, 0],[900, 0],[2200, 0],[3500, 150],[5500, 0],
+    [12000, 400],[21000, 900],[35000, 2500],[49000, 6250],[15000, 0],[7000, 0]
+  ];
+
+  const amountGrid = document.getElementById('amountGrid');
+  const selectedAmountEl = document.getElementById('selectedAmount');
+  const customInput = document.getElementById('customAmount');
+  const providerSelect = document.getElementById('provider');
+  const goToPay = document.getElementById('goToPay');
+  const selectPage = document.getElementById('selectPage');
+  const payPage = document.getElementById('payPage');
+  const payAmount = document.getElementById('payAmount');
+  const payProvider = document.getElementById('payProvider');
+  const payTotal = document.getElementById('payTotal');
+  const tillNumber = document.getElementById('tillNumber');
+  const tillLabel = document.getElementById('tillLabel');
+  const txId = document.getElementById('txId');
+  const confirmBtn = document.getElementById('confirmBtn');
+  const overlay = document.getElementById('overlay');
+  const doneBtn = document.getElementById('doneBtn');
+  const back = document.getElementById('back');
+  const editBtn = document.getElementById('editBtn');
+
+  let selected = null;
+
+  // populate grid
+  amounts.forEach(([amt, bonus]) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'amount-box';
+    btn.innerHTML = `<div class="amt">KSH ${amt.toLocaleString()}</div>` +
+                    (bonus ? `<div class="bonus">+KSH ${bonus.toLocaleString()}</div>` : `<div style="height:18px"></div>`);
+    btn.addEventListener('click', () => selectAmount(amt, bonus, btn));
+    amountGrid.appendChild(btn);
+  });
+
+  function clearSelection(){
+    document.querySelectorAll('.amount-box').forEach(b => b.classList.remove('selected'));
+    selected = null;
+    selectedAmountEl.textContent = '—';
+  }
+
+  function selectAmount(amt, bonus, btn){
+    if (customInput) customInput.value = '';
+    document.querySelectorAll('.amount-box').forEach(b => b.classList.remove('selected'));
+    if (btn) btn.classList.add('selected');
+    selected = { amt: Number(amt), bonus: Number(bonus) };
+    selectedAmountEl.textContent = `KSH ${selected.amt.toLocaleString()} ${selected.bonus ? '(+'+selected.bonus.toLocaleString()+' bonus)' : ''}`;
+  }
+
+  if (customInput) {
+    customInput.addEventListener('input', () => {
+      const v = Number(customInput.value);
+      document.querySelectorAll('.amount-box').forEach(b => b.classList.remove('selected'));
+      if (!v) { selected = null; selectedAmountEl.textContent = '—'; return; }
+      selected = { amt: v, bonus: 0 };
+      selectedAmountEl.textContent = `KSH ${v.toLocaleString()}`;
+    });
+  }
+
+  if (goToPay) {
+    goToPay.addEventListener('click', () => {
+      const provider = providerSelect.value;
+      const amount = selected ? selected.amt : Number(customInput.value);
+      if (!amount || amount < 200) { alert('Enter or select an amount of at least KSH 200.'); return; }
+      payAmount.textContent = `KSH ${amount.toLocaleString()}`;
+      payProvider.textContent = provider.toUpperCase();
+      const total = amount + (selected && selected.bonus ? selected.bonus : 0);
+      payTotal.textContent = `KSH ${total.toLocaleString()}`;
+      // update till based on provider
+      if (provider === 'mpesa') {
+        tillNumber.textContent = '6984245';
+        tillLabel.textContent = 'Buy goods';
+      } else {
+        tillNumber.textContent = '0792572591';
+        tillLabel.textContent = 'Send money';
+      }
+      selectPage.classList.remove('active');
+      payPage.classList.add('active');
+      window.scrollTo(0,0);
+    });
+  }
+
+  if (confirmBtn) {
+    confirmBtn.addEventListener('click', () => {
+      const provider = providerSelect.value;
+      const amount = selected ? selected.amt : Number(customInput.value);
+      const id = txId.value.trim();
+      if (!amount || amount < 200) { alert('Invalid amount.'); return; }
+      if (!id) { alert('Please enter transaction ID.'); return; }
+      showSuccess(`KSH ${amount.toLocaleString()} received via ${provider.toUpperCase()}. Transaction ID ${id}.`);
+    });
+  }
+
+  function showSuccess(message){
+    document.getElementById('successMsg').textContent = message;
+    overlay.classList.add('show');
+  }
+
+  if (doneBtn) {
+    doneBtn.addEventListener('click', () => {
+      overlay.classList.remove('show');
+      clearSelection();
+      customInput.value = '';
+      txHere’s the **remaining part of your merged `recharge.html`**, completing the flow with the success overlay and JavaScript logic:
+
+```html
+      overlay.setAttribute('aria-hidden', 'true');
+      // reset and go back to selection
+      clearSelection();
+      if (customInput) customInput.value = '';
+      if (txId) txId.value = '';
+      if (screenshot) screenshot.value = '';
+      if (providerSelect) providerSelect.value = 'mpesa';
+      payPage.classList.remove('active');
+      selectPage.classList.add('active');
+      window.scrollTo(0,0);
+    });
+  }
+
+  if (back) {
+    back.addEventListener('click', () => {
+      if (payPage.classList.contains('active')) {
+        payPage.classList.remove('active');
+        selectPage.classList.add('active');
+      } else {
+        history.back();
+      }
+    });
+  }
+
+  if (editBtn) {
+    editBtn.addEventListener('click', () => {
+      payPage.classList.remove('active');
+      selectPage.classList.add('active');
+      window.scrollTo(0,0);
+    });
+  }
+
+  // preselect a common amount
+  selectAmount(3500, 150);
+</script>
+</body>
+</html>

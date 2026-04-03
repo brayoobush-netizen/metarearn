@@ -101,13 +101,6 @@
     <div class="balance">Balance: KSh{{ user.wallet_balance }} <i class="bi bi-eye-slash"></i></div>
   </div>
 
-  <!-- Banner section (PNG slots) -->
-  <div class="banner-section">
-    <img src="/static/images/banner1.png" alt="Banner 1">
-    <img src="/static/images/banner2.png" alt="Banner 2">
-    <img src="/static/images/banner3.png" alt="Banner 3">
-  </div>
-
   <!-- Announcements ticker -->
   <div class="ticker">
     <i class="bi bi-mic-fill"></i>
@@ -150,7 +143,7 @@ MetaEarn — founded in 2013, empowering users with daily income opportunities �
 
   <!-- Icon Grid -->
   <div class="icon-grid">
-    <div class="icon-box"><i class="bi bi-wallet-fill"></i><p>Recharge</p></div>
+<a href="{{ url_for('recharge') }}" class="btn btn-success">💲 Recharge</a>
     <div class="icon-box"><i class="bi bi-cash-coin"></i><p>Withdraw</p></div>
     <div class="icon-box"><i class="bi bi-bank2"></i><p>Bank</p></div>
     <div class="icon-box"><i class="bi bi-calendar-event-fill"></i><p>Check in</p></div>

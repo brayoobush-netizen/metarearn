@@ -76,13 +76,35 @@
     </div>
   </div>
 
-  <div class="bottom-nav">
-  <a href="/"><i class="bi bi-house-fill"></i>Home</a>
-  <a href="/product"><i class="bi bi-box-seam"></i>Product</a>
-  <a href="/financial"><i class="bi bi-bar-chart-fill"></i>Financial</a>
-  <a href="/team"><i class="bi bi-people-fill"></i>Team</a>
-  <a href="/mine"><i class="bi bi-person-fill"></i>Mine</a>
-</div>
+  <!-- Bottom navigation -->
+  <nav class="bottom-nav" role="navigation" aria-label="Bottom navigation">
+    <a href="{{ url_for('home') }}">
+      <i class="bi bi-house-fill" aria-hidden="true"></i>
+      <span>Home</span>
+    </a>
+
+    <!-- These are still links to product/financial pages; keep them if routes exist.
+         If you prefer buttons here too, replace with <button> and JS navigation. -->
+    <a href="{{ url_for('product') }}">
+      <i class="bi bi-box-seam" aria-hidden="true"></i>
+      <span>Products</span>
+    </a>
+
+    <a href="{{ url_for('financial') }}">
+      <i class="bi bi-bar-chart-fill" aria-hidden="true"></i>
+      <span>Financial</span>
+    </a>
+
+    <a href="{{ url_for('team') }}">
+      <i class="bi bi-people-fill" aria-hidden="true"></i>
+      <span>Team</span>
+    </a>
+
+    <a href="{{ url_for('mine') }}">
+      <i class="bi bi-person-fill" aria-hidden="true"></i>
+      <span>Mine</span>
+    </a>
+  </nav>
   <!-- Footer -->
   <footer>
     MetaEarn © 2013–2026 | Building trust and opportunities for over a decade.  
