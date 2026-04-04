@@ -18,7 +18,7 @@
     .container { width:100%; max-width:920px; background:#fff; border-radius:12px; box-shadow:0 8px 30px rgba(2,6,23,0.08); overflow:hidden; }
     header { padding:16px 20px; border-bottom:1px solid #eef2f7; display:flex; align-items:center; gap:12px; }
     header h1 { font-size:18px; margin:0; }
-    main { padding:18px; max-height:78vh; overflow:auto; scroll-behavior:smooth; }
+    main { padding:18px; overflow-y:auto; scroll-behavior:smooth; }
     .card { background:linear-gradient(135deg,#16a34a,#0f9d58); color:#fff; padding:18px; border-radius:10px; }
     .stats { display:flex; gap:10px; margin-top:12px; }
     .stat { background:rgba(255,255,255,0.08); padding:10px; border-radius:8px; flex:1; text-align:center; }
@@ -40,10 +40,12 @@
     .till { background:#fff; padding:12px; border-radius:8px; border:1px dashed #dbeafe; display:flex; justify-content:space-between; align-items:center; }
     .overlay { position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(2,6,23,0.45); }
     .overlay.show { display:flex; }
-    .success { background:#fff; padding:28px; border-radius:12px; text-align:center; max-width:420px; }
+    .success { background:#fff; padding:28px; border-radius:12px; text-align:center; max-width:420px; position:relative; }
     .tick { width:84px; height:84px; border-radius:50%; background:linear-gradient(180deg,#e6fff0,#d1f7df); display:flex; align-items:center; justify-content:center; margin:0 auto 12px; }
     .tick i { color:var(--green); font-size:36px; }
-  </style>
+    .close-btn { position:absolute; top:12px; right:12px; background:none; border:none; font-size:22px; cursor:pointer; color:var(--muted); }
+  
+</style>
 </head>
 <body>
   <div class="container">
@@ -63,15 +65,14 @@
       <div class="section">
         <h4><strong>Select amount</strong></h4>
         <div id="amountGrid" class="amount-grid"></div>
-
         <div class="form-row">
           <div style="flex:1">
-            <label for="customAmount"><strong>Enter amount (KSH)</strong></label>
-            <input id="customAmount" class="input" type="number" min="200" placeholder="e.g., 1200">
+            <label for="amountInput"><strong>Enter amount (KSH)</strong></label>
+            <input id="amountInput" name="amount" class="input" type="number" min="200" placeholder="e.g., 1200">
           </div>
           <div style="width:220px">
-            <label for="provider"><strong>Choose provider</strong></label>
-            <select id="provider" class="input">
+            <label for="providerSelect"><strong>Choose provider</strong></label>
+            <select id="providerSelect" name="provider" class="input">
               <option value="mpesa">M-Pesa</option>
               <option value="airtel">Airtel</option>
               <option value="equitel">Equitel</option>
@@ -80,16 +81,14 @@
             </select>
           </div>
         </div>
-
         <div class="confirm">
-          <button id="goToPay" class="btn" type="button"><span>💲</span>Recharge</button>
+          <button id="goToPay" class="btn" type="button">💲 Recharge</button>
           <div class="small">Selected: <span id="selectedAmount">—</span></div>
         </div>
       </div>
 
-      <!-- Confirm payment -->
-      <div class="section">
-        <h4><strong>Confirm payment</strong></h4>
+      <!-- Confirm payment form -->
+      <form id="rechargeForm" action="/recharge" method="POST" enctype="multipart/form-data" class="section">
         <div class="pay-card">
           <div class="pay-row">
             <div><div class="small">Requested amount</div><div class="pay-amount" id="payAmount">KSH 0</div></div>
@@ -105,16 +104,20 @@
           </div>
           <div style="margin-top:12px">
             <label class="small"><strong>Upload screenshot</strong></label>
-            <input id="screenshot" class="input" type="file" accept="image/*">
+            <input id="screenshot" name="screenshot" class="input" type="file" accept="image/*">
           </div>
           <div style="margin-top:12px">
             <label class="small"><strong>Transaction ID</strong></label>
-            <input id="txId" class="input" type="text" placeholder="Enter transaction ID">
+            <input id="txId" name="transaction_id" class="input" type="text" placeholder="Enter transaction ID">
           </div>
           <div style="margin-top:12px">
-            <button id="confirmBtn"Here’s the **full, professional, scrollable recharge page** you asked for — with the exact amounts in boxes, bonuses highlighted, provider logic (M‑Pesa → Buy Goods till 6984245, Airtel → Send Money 0792572591), screenshot upload, transaction ID, and a smooth success popup. Everything is in one clean file, no duplicates:
+            <button id="confirmBtn" class="btn" type="submit">Confirm</button>
+                      <div style="margin-top:12px">
+          </div>
+        </div>
+      </form>
 
-<!-- Policies -->
+      <!-- Policies -->
       <div class="section rules" style="margin-top:20px">
         <h4><strong>Top-up rules & policies</strong></h4>
         <ul style="margin:8px 0 0 18px;color:var(--muted)">
@@ -130,9 +133,10 @@
   <!-- success overlay -->
   <div id="overlay" class="overlay">
     <div class="success">
+      <button id="closeBtn" class="close-btn">&times;</button>
       <div class="tick"><i class="bi bi-check-lg"></i></div>
-      <h3>Deposit successful</h3>
-      <p class="small" id="successMsg">Your top-up has been received and credited.</p>
+      <h3>Request for recharge sent</h3>
+      <p class="small" id="successMsg">Your account will be credited shortly (pending admin approval).</p>
       <div style="margin-top:12px"><button id="doneBtn" class="btn" type="button">Done</button></div>
     </div>
   </div>
@@ -145,8 +149,8 @@
 
   const amountGrid = document.getElementById('amountGrid');
   const selectedAmountEl = document.getElementById('selectedAmount');
-  const customInput = document.getElementById('customAmount');
-  const providerSelect = document.getElementById('provider');
+  const customInput = document.getElementById('amountInput');
+  const providerSelect = document.getElementById('providerSelect');
   const goToPay = document.getElementById('goToPay');
   const payAmount = document.getElementById('payAmount');
   const payProvider = document.getElementById('payProvider');
@@ -154,9 +158,10 @@
   const tillNumber = document.getElementById('tillNumber');
   const tillLabel = document.getElementById('tillLabel');
   const txId = document.getElementById('txId');
-  const confirmBtn = document.getElementById('confirmBtn');
+  const screenshot = document.getElementById('screenshot');
   const overlay = document.getElementById('overlay');
   const doneBtn = document.getElementById('doneBtn');
+  const closeBtn = document.getElementById('closeBtn');
   const accountBalance = document.getElementById('accountBalance');
   const todaysRecharge = document.getElementById('todaysRecharge');
   const totalRecharge = document.getElementById('totalRecharge');
@@ -181,11 +186,11 @@
   }
 
   function selectAmount(amt, bonus, btn){
-    if (customInput) customInput.value = '';
     document.querySelectorAll('.amount-box').forEach(b => b.classList.remove('selected'));
     if (btn) btn.classList.add('selected');
     selected = { amt: Number(amt), bonus: Number(bonus) };
     selectedAmountEl.textContent = `KSH ${selected.amt.toLocaleString()} ${selected.bonus ? '(+'+selected.bonus.toLocaleString()+' bonus)' : ''}`;
+    customInput.value = selected.amt;
   }
 
   if (customInput) {
@@ -217,23 +222,41 @@
         tillNumber.textContent = '—';
         tillLabel.textContent = '—';
       }
-      window.scrollTo(0,document.body.scrollHeight);
+      document.querySelector('.pay-card').scrollIntoView({behavior:'smooth'});
     });
   }
 
-  if (confirmBtn) {
-    confirmBtn.addEventListener('click', () => {
-      const provider = providerSelect.value;
-      const amount = selected ? selected.amt : Number(customInput.value);
-      const id = txId.value.trim();
-      if (!amount || amount < 200) { alert('Invalid amount.'); return; }
-      if (!id) { alert('Please enter transaction ID.'); return; }
-      showSuccess(`KSH ${amount.toLocaleString()} received via ${provider.toUpperCase()}. Transaction ID ${id}.`);
+  // handle form submit
+  document.getElementById("rechargeForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const provider = providerSelect.value;
+    const amount = selected ? selected.amt : Number(customInput.value);
+    const id = txId.value.trim();
+
+    if (!amount || amount < 200) { alert("Invalid amount."); return; }
+    if (!id) { alert("Please enter transaction ID."); return; }
+    if (screenshot.files.length === 0) { alert("Please upload screenshot."); return; }
+
+    const formData = new FormData();
+    formData.append("provider", provider);
+    formData.append("amount", amount);
+    formData.append("transaction_id", id);
+    formData.append("screenshot", screenshot.files[0]);
+
+    fetch("/recharge", {
+      method: "POST",
+      body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+      showSuccess(data.message);
       accountBalance.textContent = `KSH ${amount.toLocaleString()}`;
       todaysRecharge.textContent = `KSH ${amount.toLocaleString()}`;
       totalRecharge.textContent = `KSH ${(parseInt(totalRecharge.textContent.replace(/\D/g,'')) + amount).toLocaleString()}`;
-    });
-  }
+    })
+    .catch(err => alert("Error sending recharge: " + err));
+  });
 
   function showSuccess(message){
     document.getElementById('successMsg').textContent = message;
@@ -246,8 +269,15 @@
       clearSelection();
       customInput.value = '';
       txId.value = '';
+      screenshot.value = '';
       providerSelect.value = 'mpesa';
       window.scrollTo(0,0);
+    });
+  }
+
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+      overlay.classList.remove('show');
     });
   }
 </script>

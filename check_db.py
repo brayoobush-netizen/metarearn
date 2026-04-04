@@ -1,0 +1,10 @@
+import sqlite3
+
+conn = sqlite3.connect("users.db")
+cur = conn.cursor()
+
+print("Tables in users.db:")
+cur.execute("SELECT name FROM sqlite_master WHERE type='table';")
+print(cur.fetchall())
+
+conn.close()

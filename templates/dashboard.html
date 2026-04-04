@@ -288,6 +288,22 @@ MetaEarn â€” founded in 2013, empowering users with daily income opportunities â
 
   </div>
 
+<h2>My Recharge Requests</h2>
+<table>
+  <tr>
+    <th>ID</th><th>Amount</th><th>Provider</th><th>Status</th><th>Created</th>
+  </tr>
+  {% for r in recharges %}
+  <tr>
+    <td>{{ r.id }}</td>
+    <td>{{ r.amount }}</td>
+    <td>{{ r.provider }}</td>
+    <td>{{ r.status }}</td>
+    <td>{{ r.created_at }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
   <!-- Bottom Navigation -->
   <nav class="bottom-nav" role="navigation" aria-label="Bottom navigation">
     <a href="{{ url_for('home') }}">

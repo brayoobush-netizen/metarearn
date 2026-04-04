@@ -1,11 +1,10 @@
-# app.py
 from flask import (
     Flask, render_template, render_template_string, request,
     redirect, url_for, session, flash, send_from_directory, abort
 )
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-from models import db, User
+from models import db, User, Recharge
 import random
 import os
 import traceback
@@ -18,11 +17,11 @@ from functools import wraps
 # App setup
 # -------------------------
 app = Flask(__name__, static_folder="static", template_folder="templates")
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///users.db"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 # Secret key and DB config
 app.secret_key = os.environ.get("SECRET_KEY", "dev_secret")
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///users.db")
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 # Initialize DB + migrations
 db.init_app(app)
@@ -31,6 +30,8 @@ migrate = Migrate(app, db)
 # -------------------------
 # Helpers
 # -------------------------
+ALLOWED_IMAGE_EXT = (".png", ".jpg", ".jpeg", ".gif")
+
 def get_current_user():
     """Return the logged-in User object or None."""
     user_id = session.get("user_id")
@@ -42,17 +43,13 @@ def allowed_file(filename):
     return filename and filename.lower().endswith(ALLOWED_IMAGE_EXT)
 
 def login_required(redirect_endpoint="login"):
-    """
-    Decorator to protect routes that require authentication.
-    If the user is not logged in, redirect to the login page.
-    """
+    """Decorator to protect routes that require authentication."""
     def decorator(f):
         @wraps(f)
         def wrapped(*args, **kwargs):
             if not session.get("user_id"):
                 flash("Please log in to access that page.", "warning")
                 return redirect(url_for(redirect_endpoint))
-            # Optionally verify the user still exists
             user = get_current_user()
             if not user:
                 session.clear()
@@ -115,6 +112,33 @@ def financial():
                            total_recharge=total_recharge,
                            user=user)
 
+@app.route("/recharge", methods=["POST"])
+@login_required()
+def recharge():
+    user = get_current_user()
+    amount = request.form.get("amount")
+    provider = request.form.get("provider")
+    transaction_id = request.form.get("transaction_id")
+    screenshot_file = request.files.get("screenshot")
+
+    filename = None
+    if screenshot_file:
+        filename = secure_filename(screenshot_file.filename)
+        screenshot_file.save(os.path.join("static/uploads", filename))
+
+    new_recharge = Recharge(
+        user_id=user.id,
+        amount=int(amount),
+        provider=provider,
+        transaction_id=transaction_id,
+        screenshot_filename=filename,
+        status="pending"
+    )
+    db.session.add(new_recharge)
+    db.session.commit()
+
+    return {"message": "Request for recharge sent. Your account will be credited shortly."}
+
 @app.route("/team")
 def team():
     return render_template("team.html")
@@ -128,11 +152,6 @@ def home():
     if session.get("user_id"):
         return redirect(url_for("dashboard"))
     return redirect(url_for("landing"))
-
-@app.route('/recharge')
-def recharge():
-    # Do something here, e.g. render a recharge page
-    return render_template('recharge.html')
 
 # -------------------------
 # Authentication: Register / Verify / Login / Logout
@@ -262,6 +281,70 @@ def logout():
     flash("You have been logged out.")
     return redirect(url_for("landing"))
 
+@app.route("/recharge", methods=["GET"])
+@login_required()
+def show_recharge():
+    return render_template("recharge.html")
+
+
+@app.route("/admin/recharges")
+@login_required()
+def admin_recharges():
+    # Get all recharge requests, newest first
+    recharges = Recharge.query.order_by(Recharge.created_at.desc()).all()
+    return render_template("admin_recharges.html", recharges=recharges)
+
+@app.route("/admin/recharges/<int:recharge_id>/confirm", methods=["POST"])
+@login_required()
+def confirm_recharge(recharge_id):
+    recharge = Recharge.query.get_or_404(recharge_id)
+    recharge.status = "confirmed"
+    recharge.user.wallet_balance += recharge.amount
+    db.session.commit()
+    flash(f"Recharge {recharge.transaction_id} confirmed for {recharge.user.email}", "success")
+    return redirect(url_for("admin_recharges"))
+
+@app.route("/admin/recharges/<int:recharge_id>/reject", methods=["POST"])
+@login_required()
+def reject_recharge(recharge_id):
+    recharge = Recharge.query.get_or_404(recharge_id)
+    recharge.status = "rejected"
+    db.session.commit()
+    flash(f"Recharge {recharge.transaction_id} rejected for {recharge.user.email}", "danger")
+    return redirect(url_for("admin_recharges"))
+
+@app.route("/recharge", methods=["POST"])
+@login_required()
+def submit_recharge():
+    user = get_current_user()
+    amount = request.form.get("amount")
+    provider = request.form.get("provider")
+    transaction_id = request.form.get("transaction_id")
+    screenshot_file = request.files.get("screenshot")
+
+    filename = None
+    if screenshot_file:
+        from werkzeug.utils import secure_filename
+        import os
+        filename = secure_filename(screenshot_file.filename)
+        upload_folder = os.path.join(app.root_path, "static", "uploads")
+        os.makedirs(upload_folder, exist_ok=True)
+        screenshot_file.save(os.path.join(upload_folder, filename))
+
+    new_recharge = Recharge(
+        user_id=user.id,
+        amount=int(amount),
+        provider=provider,
+        transaction_id=transaction_id,
+        screenshot_filename=filename,
+        status="pending"
+    )
+    db.session.add(new_recharge)
+    db.session.commit()
+
+    flash("Recharge request submitted successfully! Pending admin approval.", "success")
+    return redirect(url_for("dashboard"))
+
 # -------------------------
 # Dashboard & user actions
 # -------------------------
@@ -271,7 +354,10 @@ def dashboard():
     """
     Private dashboard. Requires login via @login_required.
     """
-    user = get_current_user()
+    user = get_current_user()                    
+    recharges=Recharge.query.filter_by(user_id=user.id).order_by(Recharge.created_at.desc()).all()
+    return render_template("dashboard.html", user=user, recharges=recharges)
+
     # Prepare safe subscription list for template
     subs = []
     if hasattr(user, "subscriptions") and user.subscriptions:
