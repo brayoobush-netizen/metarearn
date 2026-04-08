@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -79,7 +80,7 @@
       transition:transform 0.3s, box-shadow 0.3s;
     }
     .product-card:hover { transform:scale(1.03); box-shadow:0 0 25px rgba(255,255,0,0.7); }
-    .product-card img { width:60px; height:60px; margin-right:15px; border-radius:8px; object-fit:cover; }
+    .product-card img { width:60px; height:100px; margin-right:15px; border-radius:8px; object-fit:cover; }
     .product-details { flex:1; }
     /* Bottom nav + footer */
     .bottom-nav {
@@ -141,12 +142,30 @@ MetaEarn â€” founded in 2013, empowering users with daily income opportunities â
     <strong>Invite new people and get gifts!</strong>
   </div>
 
+<!-- Flash messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+
   <!-- Icon Grid -->
   <div class="icon-grid">
-<a href="{{ url_for('recharge') }}" class="btn btn-success">ðŸ’² Recharge</a>
-    <div class="icon-box"><i class="bi bi-cash-coin"></i><p>Withdraw</p></div>
+    <a href="{{ url_for('recharge') }}" class="icon-box"><i class="bi bi-credit-card-fill"></i><p>Recharge</p></a>
+    <a href="{{ url_for('withdraw') }}" class="icon-box">
+  <i class="bi bi-cash-coin"></i>
+  <p>Withdraw</p>
+</a>
     <div class="icon-box"><i class="bi bi-bank2"></i><p>Bank</p></div>
-    <div class="icon-box"><i class="bi bi-calendar-event-fill"></i><p>Check in</p></div>
+    <form action="{{ url_for('checkin') }}" method="post" class="icon-box">
+      <button type="submit" class="btn btn-success w-100"><i class="bi bi-calendar-event-fill"></i><p>Check In</p></button>
+    </form>
     <div class="icon-box"><i class="bi bi-list-check"></i><p>Task</p></div>
   </div>
 
@@ -167,7 +186,7 @@ MetaEarn â€” founded in 2013, empowering users with daily income opportunities â
 </div>
 
   <div class="product-card">
-  <img src="/static/images/metearn1.png" alt="MetaEarn 1" style="width:25%; height:auto; border-radius:8px; object-fit:cover; margin-right:15px;">
+  <img src="/static/images/metearn1.png" alt="MetaEarn 1" style="width:25%; height: 100%; border-radius:8px; object-fit:cover; margin: right 25px;">
   <div class="product-details" style="padding-left:10px;">
     <h5>MetaEarn 1</h5>
     <p>Price: KSh900</p>
@@ -287,22 +306,6 @@ MetaEarn â€” founded in 2013, empowering users with daily income opportunities â
 </div>
 
   </div>
-
-<h2>My Recharge Requests</h2>
-<table>
-  <tr>
-    <th>ID</th><th>Amount</th><th>Provider</th><th>Status</th><th>Created</th>
-  </tr>
-  {% for r in recharges %}
-  <tr>
-    <td>{{ r.id }}</td>
-    <td>{{ r.amount }}</td>
-    <td>{{ r.provider }}</td>
-    <td>{{ r.status }}</td>
-    <td>{{ r.created_at }}</td>
-  </tr>
-  {% endfor %}
-</table>
 
   <!-- Bottom Navigation -->
   <nav class="bottom-nav" role="navigation" aria-label="Bottom navigation">

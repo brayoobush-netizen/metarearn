@@ -1,285 +1,276 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Recharge</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-  <style>
-    :root {
-      --green:#0f9d58;
-      --bonus:#ff5722;
-      --muted:#6b7280;
-      --box-border:#e6e9ee;
-      --selected:#d1fae5;
-      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial;
-    }
-    body { margin:0; background:#f3f6f9; color:#071133; display:flex; justify-content:center; padding:20px; }
-    .container { width:100%; max-width:920px; background:#fff; border-radius:12px; box-shadow:0 8px 30px rgba(2,6,23,0.08); overflow:hidden; }
-    header { padding:16px 20px; border-bottom:1px solid #eef2f7; display:flex; align-items:center; gap:12px; }
-    header h1 { font-size:18px; margin:0; }
-    main { padding:18px; overflow-y:auto; scroll-behavior:smooth; }
-    .card { background:linear-gradient(135deg,#16a34a,#0f9d58); color:#fff; padding:18px; border-radius:10px; }
-    .stats { display:flex; gap:10px; margin-top:12px; }
-    .stat { background:rgba(255,255,255,0.08); padding:10px; border-radius:8px; flex:1; text-align:center; }
-    .stat small { display:block; font-size:12px; }
-    .stat strong { display:block; font-size:18px; margin-top:6px; }
-    .section { margin-top:18px; }
-    .amount-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
-    .amount-box { background:#fff; border:1px solid var(--box-border); padding:12px; border-radius:8px; text-align:center; cursor:pointer; }
-    .amount-box .amt { font-weight:700; font-size:16px; }
-    .amount-box .bonus { display:block; margin-top:6px; color:var(--bonus); font-weight:700; }
-    .amount-box.selected { background:var(--selected); border-color:var(--green); }
-    .form-row { display:flex; gap:12px; flex-wrap:wrap; margin-top:12px; }
-    .input, select { flex:1; min-width:160px; padding:10px; border-radius:8px; border:1px solid var(--box-border); font-size:14px; }
-    .btn { background:var(--green); color:#fff; padding:10px 14px; border-radius:8px; border:0; cursor:pointer; font-weight:700; }
-    .confirm { margin-top:12px; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-    .pay-card { background:#f9fffb; border-left:6px solid var(--green); padding:18px; border-radius:10px; margin-top:18px; }
-    .pay-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
-    .pay-amount { font-size:22px; font-weight:800; color:var(--green); }
-    .till { background:#fff; padding:12px; border-radius:8px; border:1px dashed #dbeafe; display:flex; justify-content:space-between; align-items:center; }
-    .overlay { position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(2,6,23,0.45); }
-    .overlay.show { display:flex; }
-    .success { background:#fff; padding:28px; border-radius:12px; text-align:center; max-width:420px; position:relative; }
-    .tick { width:84px; height:84px; border-radius:50%; background:linear-gradient(180deg,#e6fff0,#d1f7df); display:flex; align-items:center; justify-content:center; margin:0 auto 12px; }
-    .tick i { color:var(--green); font-size:36px; }
-    .close-btn { position:absolute; top:12px; right:12px; background:none; border:none; font-size:22px; cursor:pointer; color:var(--muted); }
-  
-</style>
+    <title>Recharge</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            background: linear-gradient(to bottom, #f0fff4, #e6f7ff); 
+            overflow-y: scroll;
+        }
+        h2 { text-align: center; margin-top: 20px; }
+
+        /* Green balance card */
+        .balance-card {
+            background: #0f9d58;
+            color: #fff;
+            padding: 20px;
+            margin: 20px auto;
+            border-radius: 12px;
+            width: 90%;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        .balance-card h3 { margin: 0; font-size: 22px; }
+        .balance-card p { margin: 6px 0; font-size: 16px; }
+
+        /* Amount grid */
+        .amount-boxes {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+            margin: 20px auto;
+            width: 95%;
+        }
+        .amount-box {
+            padding: 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            text-align: center;
+            transition: 0.3s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            color: #fff;
+            position: relative;
+        }
+        .amount-box:hover {
+            transform: scale(1.08);
+            box-shadow: 0 6px 14px rgba(0,0,0,0.2);
+        }
+
+        /* Color progression */
+        .amount-box[data-amount="250"] { background: #4caf50; }
+        .amount-box[data-amount="500"] { background: #43a047; }
+        .amount-box[data-amount="900"] { background: #ff9800; }
+        .amount-box[data-amount="2200"] { background: #2196f3; }
+        .amount-box[data-amount="3500"] { background: #3f51b5; }
+        .amount-box[data-amount="5500"] { background: #e91e63; }
+        .amount-box[data-amount="12000"] { background: #9c27b0; }
+        .amount-box[data-amount="21000"] { background: #f44336; }
+        .amount-box[data-amount="35000"] { background: #ff5722; }
+        .amount-box[data-amount="49000"] { background: #795548; }
+
+        /* Bonus animation */
+        .amount-box.bonus {
+            animation: pulse 2s infinite;
+        }
+        .amount-box.bonus::after {
+            content: "🎁 Bonus!";
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #fff;
+            color: #000;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 4px 6px;
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+        /* Tooltip styling */
+        .amount-box[data-tooltip]:hover::before {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 110%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: #fff;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 10;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 10px rgba(255,255,255,0.6); }
+            50% { transform: scale(1.1); box-shadow: 0 0 20px rgba(255,255,255,0.9); }
+            100% { transform: scale(1); box-shadow: 0 0 10px rgba(255,255,255,0.6); }
+        }
+
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 6px; font-weight: bold; }
+        input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+
+        .btn { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; transition: 0.3s; }
+        .btn-confirm { background-color: #0f9d58; color: #fff; }
+        .btn-confirm:hover { background-color: #0c7a43; }
+        .btn-back { background-color: #2196f3; color: #fff; margin-top: 10px; }
+        .btn-back:hover { background-color: #1769aa; }
+
+        .success-message { display: none; color: #0f9d58; font-weight: bold; margin-top: 10px; }
+        .tick { display: none; font-size: 20px; color: #0f9d58; }
+
+        table { border-collapse: collapse; width: 95%; margin: 20px auto; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        th { background-color: #f2f2f2; }
+        img { max-width: 120px; border: 1px solid #ccc; border-radius: 4px; }
+
+        .status-badge { font-weight: bold; padding: 4px 8px; border-radius: 4px; }
+        .status-confirmed { color: #fff; background-color: #0f9d58; }
+        .status-rejected { color: #fff; background-color: #ff5722; }
+        .status-pending { color: #000; background-color: #ccc; }
+
+        .alert { padding: 10px; border-radius: 4px; margin: 15px auto; width: 90%; }
+        .alert-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .alert-danger { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .alert-warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+
+        .payment-info {
+            background: #fff8e1;
+            border: 1px solid #ffecb3;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+            display: none;
+            font-weight: bold;
+            color: #333;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <header><h1>Recharge</h1></header>
-    <main>
-      <!-- Account overview -->
-      <div class="card">
-        <h3>Account Overview</h3>
-        <div class="stats">
-          <div class="stat"><small>Account balance</small><strong id="accountBalance">KSH 0</strong></div>
-          <div class="stat"><small>Today's recharge</small><strong id="todaysRecharge">KSH 0</strong></div>
-          <div class="stat"><small>Total recharge</small><strong id="totalRecharge">KSH 0</strong></div>
-        </div>
-      </div>
+    <div class="balance-card">
+    <h3>Your Wallet Overview</h3>
+    <p><strong>Available Balance:</strong> {{ user.wallet_balance }} KSh</p>
+    <p><strong>Today's Recharge:</strong> {{ todays_recharge }} KSh</p>
+    <p><strong>Total Confirmed Recharge:</strong> {{ total_recharge }} KSh</p>
 
-      <!-- Select amount -->
-      <div class="section">
-        <h4><strong>Select amount</strong></h4>
-        <div id="amountGrid" class="amount-grid"></div>
-        <div class="form-row">
-          <div style="flex:1">
-            <label for="amountInput"><strong>Enter amount (KSH)</strong></label>
-            <input id="amountInput" name="amount" class="input" type="number" min="200" placeholder="e.g., 1200">
-          </div>
-          <div style="width:220px">
-            <label for="providerSelect"><strong>Choose provider</strong></label>
-            <select id="providerSelect" name="provider" class="input">
-              <option value="mpesa">M-Pesa</option>
-              <option value="airtel">Airtel</option>
-              <option value="equitel">Equitel</option>
-              <option value="t-kash">T-Kash</option>
-              <option value="paypal">PayPal</option>
+</div>
+
+    <h2>Recharge</h2>
+
+    <!-- Flash messages block -->
+    {% with messages = get_flashed_messages(category_filter=["recharge"]) %}
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert alert-info">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form action="{{ url_for('recharge') }}" method="post" enctype="multipart/form-data">
+        <div class="amount-boxes">
+            <div class="amount-box" data-amount="250">250</div>
+            <div class="amount-box" data-amount="500">500</div>
+            <div class="amount-box bonus" data-amount="900" data-tooltip="Recharge 900, get +150 free!">900 (+150)</div>
+            <div class="amount-box" data-amount="2200">2200</div>
+            <div class="amount-box" data-amount="3500">3500</div>
+            <div class="amount-box bonus" data-amount="5500" data-tooltip="Recharge 5500, get +400 free!">5500 (+400)</div>
+            <div class="amount-box" data-amount="12000">12000</div>
+            <div class="amount-box bonus" data-amount="21000" data-tooltip="Recharge 21000, get +900 free!">21000 (+900)</div>
+            <div class="amount-box bonus" data-amount="35000" data-tooltip="Recharge 35000, get +2500 free!">35000 (+2500)</div>
+            <div class="amount-box bonus" data-amount="49000" data-tooltip="Recharge 49000, get +6250 free!">49000 (+6250)</div>
+        </div>
+
+        <div class="form-group">
+            <label>Enter other amount</label>
+            <input type="number" name="amount" id="amountInput" required>
+        </div>
+
+        <div class="form-group">
+            <label>Payment Method</label>
+            <select name="provider" id="providerSelect" required>
+                <option value="">-- Select Method --</option>
+                <option value="MPESA">MPESA</option>
+                <option value="Airtel">Airtel Money</option>
+                <option value="Equitel">Equitel</option>
+                <option value="Bank">Bank Transfer</option>
             </select>
-          </div>
         </div>
-        <div class="confirm">
-          <button id="goToPay" class="btn" type="button">💲 Recharge</button>
-          <div class="small">Selected: <span id="selectedAmount">—</span></div>
+
+        <!-- Dynamic payment instructions -->
+        <div id="paymentInfo" class="payment-info"></div>
+
+        <div class="form-group">
+            <label>Upload Screenshot</label>
+            <input type="file" name="screenshot" accept="image/*" required>
         </div>
-      </div>
 
-      <!-- Confirm payment form -->
-      <form id="rechargeForm" action="/recharge" method="POST" enctype="multipart/form-data" class="section">
-        <div class="pay-card">
-          <div class="pay-row">
-            <div><div class="small">Requested amount</div><div class="pay-amount" id="payAmount">KSH 0</div></div>
-            <div style="text-align:right"><div class="small">Pay via</div><div id="payProvider" style="font-weight:700;color:var(--muted)">—</div></div>
-          </div>
-          <div class="pay-row">
-            <div class="small">Total recharge (amount + bonus)</div>
-            <div id="payTotal" style="font-weight:800">KSH 0</div>
-          </div>
-          <div class="till">
-            <div><strong id="tillNumber">—</strong><div class="small" id="tillLabel">—</div></div>
-            <div style="font-size:13px;color:var(--muted)">Use this till to send payment</div>
-          </div>
-          <div style="margin-top:12px">
-            <label class="small"><strong>Upload screenshot</strong></label>
-            <input id="screenshot" name="screenshot" class="input" type="file" accept="image/*">
-          </div>
-          <div style="margin-top:12px">
-            <label class="small"><strong>Transaction ID</strong></label>
-            <input id="txId" name="transaction_id" class="input" type="text" placeholder="Enter transaction ID">
-          </div>
-          <div style="margin-top:12px">
-            <button id="confirmBtn" class="btn" type="submit">Confirm</button>
-                      <div style="margin-top:12px">
-          </div>
+        <div class="form-group">
+            <label>Transaction ID</label>
+            <input type="text" name="transaction_id" required>
         </div>
-      </form>
 
-      <!-- Policies -->
-      <div class="section rules" style="margin-top:20px">
-        <h4><strong>Top-up rules & policies</strong></h4>
-        <ul style="margin:8px 0 0 18px;color:var(--muted)">
-          <li>Minimum top up amount is <strong>KSH 200</strong>.</li>
-          <li>Bonuses are credited instantly after successful payment and expire in 30 days.</li>
-          <li>Network delays may occur; keep your transaction receipt.</li>
-          <li>Contact support with transaction ID within 48 hours for disputes.</li>
-        </ul>
-      </div>
-    </main>
-  </div>
+        <button type="submit" class="btn btn-confirm">Submit Recharge</button>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-back">✖ Back to Dashboard</a>
+        <div class="success-message">Request Sent Successfully <span class="tick">✔</span></div>
+    </form>
 
-  <!-- success overlay -->
-  <div id="overlay" class="overlay">
-    <div class="success">
-      <button id="closeBtn" class="close-btn">&times;</button>
-      <div class="tick"><i class="bi bi-check-lg"></i></div>
-      <h3>Request for recharge sent</h3>
-      <p class="small" id="successMsg">Your account will be credited shortly (pending admin approval).</p>
-      <div style="margin-top:12px"><button id="doneBtn" class="btn" type="button">Done</button></div>
-    </div>
-  </div>
+    <h2>Your Recharge Requests</h2>
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Amount</th>
+            <th>Provider</th>
+            <th>Transaction ID</th>
+            <th>Status</th>
+            <th>Created At</th>
+        </tr>
+        {% for r in recharges %}
+        <tr>
+            <td>{{ r.id }}</td>
+            <td>{{ r.amount }}</td>
+            <td>{{ r.provider }}</td>
+            <td>{{ r.transaction_id }}</td>
+            <td>
+                {% if r.status == "confirmed" %}
+                    <span class="status-badge status-confirmed">Confirmed</span>
+                {% elif r.status == "rejected" %}
+                    <span class="status-badge status-rejected">Rejected</span>
+                {% else %}
+                    <span class="status-badge status-pending">Pending</span>
+                {% endif %}
+            </td>
+            <td>{{ r.created_at }}</td>
+        </tr>
+        {% endfor %}
+    </table>
 
-<script>
-  const amounts = [
-    [250, 0],[500, 0],[900, 0],[2200, 0],[3500, 0],[5500, 150],
-    [12000, 400],[21000, 900],[35000, 2500],[49000, 6250]
-  ];
+    <script>
+        // Make amount boxes clickable
+        document.querySelectorAll('.amount-box').forEach(box => {
+            box.addEventListener('click', () => {
+                document.getElementById('amountInput').value = box.dataset.amount;
+            });
+        });
 
-  const amountGrid = document.getElementById('amountGrid');
-  const selectedAmountEl = document.getElementById('selectedAmount');
-  const customInput = document.getElementById('amountInput');
-  const providerSelect = document.getElementById('providerSelect');
-  const goToPay = document.getElementById('goToPay');
-  const payAmount = document.getElementById('payAmount');
-  const payProvider = document.getElementById('payProvider');
-  const payTotal = document.getElementById('payTotal');
-  const tillNumber = document.getElementById('tillNumber');
-  const tillLabel = document.getElementById('tillLabel');
-  const txId = document.getElementById('txId');
-  const screenshot = document.getElementById('screenshot');
-  const overlay = document.getElementById('overlay');
-  const doneBtn = document.getElementById('doneBtn');
-  const closeBtn = document.getElementById('closeBtn');
-  const accountBalance = document.getElementById('accountBalance');
-  const todaysRecharge = document.getElementById('todaysRecharge');
-  const totalRecharge = document.getElementById('totalRecharge');
+        // Show success message after submit (client-side only)
+        document.querySelector('form').addEventListener('submit', function() {
+            document.querySelector('.success-message').style.display = 'block';
+            document.querySelector('.tick').style.display = 'inline';
+        });
 
-  let selected = null;
+        // Dynamic payment instructions
+        const providerSelect = document.getElementById('providerSelect');
+        const paymentInfo = document.getElementById('paymentInfo');
 
-  // populate grid
-  amounts.forEach(([amt, bonus]) => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'amount-box';
-    btn.innerHTML = `<div class="amt">KSH ${amt.toLocaleString()}</div>` +
-                    (bonus ? `<div class="bonus">+KSH ${bonus.toLocaleString()}</div>` : `<div style="height:18px"></div>`);
-    btn.addEventListener('click', () => selectAmount(amt, bonus, btn));
-    amountGrid.appendChild(btn);
-  });
-
-  function clearSelection(){
-    document.querySelectorAll('.amount-box').forEach(b => b.classList.remove('selected'));
-    selected = null;
-    selectedAmountEl.textContent = '—';
-  }
-
-  function selectAmount(amt, bonus, btn){
-    document.querySelectorAll('.amount-box').forEach(b => b.classList.remove('selected'));
-    if (btn) btn.classList.add('selected');
-    selected = { amt: Number(amt), bonus: Number(bonus) };
-    selectedAmountEl.textContent = `KSH ${selected.amt.toLocaleString()} ${selected.bonus ? '(+'+selected.bonus.toLocaleString()+' bonus)' : ''}`;
-    customInput.value = selected.amt;
-  }
-
-  if (customInput) {
-    customInput.addEventListener('input', () => {
-      const v = Number(customInput.value);
-      document.querySelectorAll('.amount-box').forEach(b => b.classList.remove('selected'));
-      if (!v) { selected = null; selectedAmountEl.textContent = '—'; return; }
-      selected = { amt: v, bonus: 0 };
-      selectedAmountEl.textContent = `KSH ${v.toLocaleString()}`;
-    });
-  }
-
-  if (goToPay) {
-    goToPay.addEventListener('click', () => {
-      const provider = providerSelect.value;
-      const amount = selected ? selected.amt : Number(customInput.value);
-      const bonus = selected ? selected.bonus : 0;
-      if (!amount || amount < 200) { alert('Enter or select an amount of at least KSH 200.'); return; }
-      payAmount.textContent = `KSH ${amount.toLocaleString()}`;
-      payProvider.textContent = provider.toUpperCase();
-      payTotal.textContent = `KSH ${(amount+bonus).toLocaleString()}`;
-      if (provider === 'mpesa') {
-        tillNumber.textContent = '6984245';
-        tillLabel.textContent = 'Buy goods';
-      } else if (provider === 'airtel') {
-        tillNumber.textContent = '0792572591';
-        tillLabel.textContent = 'Send money';
-      } else {
-        tillNumber.textContent = '—';
-        tillLabel.textContent = '—';
-      }
-      document.querySelector('.pay-card').scrollIntoView({behavior:'smooth'});
-    });
-  }
-
-  // handle form submit
-  document.getElementById("rechargeForm").addEventListener("submit", (e) => {
-    e.preventDefault();
-
-    const provider = providerSelect.value;
-    const amount = selected ? selected.amt : Number(customInput.value);
-    const id = txId.value.trim();
-
-    if (!amount || amount < 200) { alert("Invalid amount."); return; }
-    if (!id) { alert("Please enter transaction ID."); return; }
-    if (screenshot.files.length === 0) { alert("Please upload screenshot."); return; }
-
-    const formData = new FormData();
-    formData.append("provider", provider);
-    formData.append("amount", amount);
-    formData.append("transaction_id", id);
-    formData.append("screenshot", screenshot.files[0]);
-
-    fetch("/recharge", {
-      method: "POST",
-      body: formData
-    })
-    .then(res => res.json())
-    .then(data => {
-      showSuccess(data.message);
-      accountBalance.textContent = `KSH ${amount.toLocaleString()}`;
-      todaysRecharge.textContent = `KSH ${amount.toLocaleString()}`;
-      totalRecharge.textContent = `KSH ${(parseInt(totalRecharge.textContent.replace(/\D/g,'')) + amount).toLocaleString()}`;
-    })
-    .catch(err => alert("Error sending recharge: " + err));
-  });
-
-  function showSuccess(message){
-    document.getElementById('successMsg').textContent = message;
-    overlay.classList.add('show');
-  }
-
-  if (doneBtn) {
-    doneBtn.addEventListener('click', () => {
-      overlay.classList.remove('show');
-      clearSelection();
-      customInput.value = '';
-      txId.value = '';
-      screenshot.value = '';
-      providerSelect.value = 'mpesa';
-      window.scrollTo(0,0);
-    });
-  }
-
-  if (closeBtn) {
-    closeBtn.addEventListener('click', () => {
-      overlay.classList.remove('show');
-    });
-  }
-</script>
+        providerSelect.addEventListener('change', function() {
+            const provider = this.value;
+            if (provider === "MPESA") {
+                paymentInfo.style.display = 'block';
+                paymentInfo.textContent = "MPESA: Buy Goods Till 6984245";
+            } else if (provider === "Airtel") {
+                paymentInfo.style.display = 'block';
+                paymentInfo.textContent = "Airtel Money: Send Cash to 0792572591";
+            } else {
+                paymentInfo.style.display = 'none';
+                paymentInfo.textContent = "";
+            }
+        });
+    </script>
 </body>
 </html>

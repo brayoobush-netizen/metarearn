@@ -2,16 +2,19 @@ from flask import (
     Flask, render_template, render_template_string, request,
     redirect, url_for, session, flash, send_from_directory, abort
 )
+from datetime import datetime, timedelta
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import func
+from flask_migrate import Migrate
+from flask_login import LoginManager, current_user, login_required, login_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-from models import db, User, Recharge
+from models import db, User, Recharge, Withdrawal
 import random
 import os
 import traceback
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
-from flask_migrate import Migrate
-from functools import wraps
 
 # -------------------------
 # App setup
@@ -19,13 +22,21 @@ from functools import wraps
 app = Flask(__name__, static_folder="static", template_folder="templates")
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///users.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-
-# Secret key and DB config
 app.secret_key = os.environ.get("SECRET_KEY", "dev_secret")
 
-# Initialize DB + migrations
 db.init_app(app)
 migrate = Migrate(app, db)
+
+with app.app_context():
+    db.create_all()
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "login"
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
 # -------------------------
 # Helpers
@@ -33,7 +44,6 @@ migrate = Migrate(app, db)
 ALLOWED_IMAGE_EXT = (".png", ".jpg", ".jpeg", ".gif")
 
 def get_current_user():
-    """Return the logged-in User object or None."""
     user_id = session.get("user_id")
     if not user_id:
         return None
@@ -42,38 +52,15 @@ def get_current_user():
 def allowed_file(filename):
     return filename and filename.lower().endswith(ALLOWED_IMAGE_EXT)
 
-def login_required(redirect_endpoint="login"):
-    """Decorator to protect routes that require authentication."""
-    def decorator(f):
-        @wraps(f)
-        def wrapped(*args, **kwargs):
-            if not session.get("user_id"):
-                flash("Please log in to access that page.", "warning")
-                return redirect(url_for(redirect_endpoint))
-            user = get_current_user()
-            if not user:
-                session.clear()
-                flash("Session invalid. Please log in again.", "error")
-                return redirect(url_for(redirect_endpoint))
-            return f(*args, **kwargs)
-        return wrapped
-    return decorator
-
 # -------------------------
 # Public / Landing
 # -------------------------
 @app.route("/")
 def landing():
-    """
-    Public landing page.
-    Always render landing.html for both guests and logged-in users.
-    Logged-in users will see a 'Go to Dashboard' button on the landing page.
-    """
     try:
         logged_in = bool(session.get("user_id"))
         return render_template("landing.html", logged_in=logged_in)
     except Exception as e:
-        print("ERROR rendering landing.html:", e)
         traceback.print_exc()
         return render_template_string("""
             <h1>Welcome</h1>
@@ -84,9 +71,6 @@ def landing():
             {% endif %}
         """, logged_in=bool(session.get("user_id")))
 
-# -------------------------
-# Static-like pages
-# -------------------------
 @app.route("/features")
 def features():
     return render_template("features.html")
@@ -99,69 +83,25 @@ def product():
     ]
     return render_template("product.html", products=sample_products)
 
-@app.route("/financial")
-@login_required()
-def financial():
-    user = get_current_user()
-    available_balance = f"KSh{user.wallet_balance:.2f}" if getattr(user, "wallet_balance", None) is not None else "KSh0.00"
-    total_withdraw = f"KSh{getattr(user, 'total_withdraw', 0):.2f}"
-    total_recharge = f"KSh{getattr(user, 'total_recharge', 0):.2f}"
-    return render_template("financial.html",
-                           available_balance=available_balance,
-                           total_withdraw=total_withdraw,
-                           total_recharge=total_recharge,
-                           user=user)
-
-@app.route("/recharge", methods=["POST"])
-@login_required()
-def recharge():
-    user = get_current_user()
-    amount = request.form.get("amount")
-    provider = request.form.get("provider")
-    transaction_id = request.form.get("transaction_id")
-    screenshot_file = request.files.get("screenshot")
-
-    filename = None
-    if screenshot_file:
-        filename = secure_filename(screenshot_file.filename)
-        screenshot_file.save(os.path.join("static/uploads", filename))
-
-    new_recharge = Recharge(
-        user_id=user.id,
-        amount=int(amount),
-        provider=provider,
-        transaction_id=transaction_id,
-        screenshot_filename=filename,
-        status="pending"
-    )
-    db.session.add(new_recharge)
-    db.session.commit()
-
-    return {"message": "Request for recharge sent. Your account will be credited shortly."}
-
 @app.route("/team")
 def team():
     return render_template("team.html")
+
 @app.route("/home")
 def home():
-    """
-    Home route used by navigation:
-    - If logged in -> dashboard
-    - If not -> landing
-    """
     if session.get("user_id"):
         return redirect(url_for("dashboard"))
     return redirect(url_for("landing"))
 
 # -------------------------
-# Authentication: Register / Verify / Login / Logout
+# Authentication
 # -------------------------
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
         email = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "")
-        profile_file = request.files.get("profile")  # optional PNG upload
+        profile_file = request.files.get("profile")
 
         if not email or not password:
             flash("Please provide email and password.", "error")
@@ -181,24 +121,22 @@ def register():
             total_earnings=0.0
         )
 
-        # Save profile image if provided
         if profile_file and allowed_file(profile_file.filename):
             filename = secure_filename(profile_file.filename)
-            save_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-            profile_file.save(save_path)
+            upload_folder = os.path.join(app.root_path, "static", "uploads")
+            os.makedirs(upload_folder, exist_ok=True)
+            profile_file.save(os.path.join(upload_folder, filename))
             if hasattr(new_user, "profile_image"):
                 new_user.profile_image = filename
 
         db.session.add(new_user)
         db.session.commit()
 
-        # Generate OTP and store pending info in session
         otp = str(random.randint(100000, 999999))
         session["otp"] = otp
         session["pending_user_id"] = new_user.id
         session["pending_email"] = email
 
-        # Send OTP via SendGrid (best-effort)
         try:
             message = Mail(
                 from_email="metarearn@gmail.com",
@@ -264,38 +202,92 @@ def login():
 
         user = User.query.filter_by(email=email).first()
         if user and check_password_hash(user.password, password):
-            session["user_id"] = user.id
+            login_user(user)  # <-- this tells Flask-Login you’re authenticated
             flash("Welcome back!", "success")
             return redirect(url_for("dashboard"))
         else:
             flash("Invalid credentials", "error")
+            return redirect(url_for("login"))
+
     return render_template("login.html")
 
 @app.route("/logout", methods=["GET", "POST"])
 def logout():
-    """
-    Clear session and redirect to landing.
-    Prefer POST from UI; GET is allowed for convenience.
-    """
     session.clear()
     flash("You have been logged out.")
     return redirect(url_for("landing"))
 
-@app.route("/recharge", methods=["GET"])
-@login_required()
-def show_recharge():
-    return render_template("recharge.html")
+# -------------------------
+# Recharge
+# -------------------------
+@app.route("/recharge", methods=["GET", "POST"])
+@login_required
+def recharge():
+    user = current_user
 
+    if request.method == "POST":
+        amount = request.form.get("amount")
+        provider = request.form.get("provider")
+        transaction_id = request.form.get("transaction_id")
+        screenshot_file = request.files.get("screenshot")
+
+        filename = None
+        if screenshot_file:
+            filename = secure_filename(screenshot_file.filename)
+            upload_folder = os.path.join(app.root_path, "static", "uploads")
+            os.makedirs(upload_folder, exist_ok=True)
+            screenshot_file.save(os.path.join(upload_folder, filename))
+
+        new_recharge = Recharge(
+            user_id=user.id,
+            amount=int(amount),
+            provider=provider,
+            transaction_id=transaction_id,
+            screenshot_filename=filename,
+            status="pending"
+        )
+        db.session.add(new_recharge)
+        db.session.commit()
+
+        flash("Recharge request submitted successfully! Pending admin approval.", "recharge")
+
+        # ✅ Redirect after POST to avoid duplicate submissions
+        return redirect(url_for("recharge"))
+
+    # Calculate today's recharge (last 24 hours, confirmed only)
+    now = datetime.utcnow()
+    last_24h = now - timedelta(hours=24)
+    todays_recharge = db.session.query(func.sum(Recharge.amount)).filter(
+        Recharge.user_id == user.id,
+        Recharge.status == "confirmed",
+        Recharge.created_at >= last_24h
+    ).scalar() or 0
+
+    # Calculate total confirmed recharge (all time)
+    total_recharge = db.session.query(func.sum(Recharge.amount)).filter(
+        Recharge.user_id == user.id,
+        Recharge.status == "confirmed"
+    ).scalar() or 0
+
+    # Only show this user's recharges
+    recharges = Recharge.query.filter_by(user_id=user.id).order_by(Recharge.created_at.desc()).all()
+
+    return render_template(
+        "recharge.html",
+        user=user,
+        recharges=recharges,
+        todays_recharge=todays_recharge,
+        total_recharge=total_recharge
+    )
 
 @app.route("/admin/recharges")
-@login_required()
+@login_required
 def admin_recharges():
-    # Get all recharge requests, newest first
     recharges = Recharge.query.order_by(Recharge.created_at.desc()).all()
     return render_template("admin_recharges.html", recharges=recharges)
 
 @app.route("/admin/recharges/<int:recharge_id>/confirm", methods=["POST"])
-@login_required()
+@login_required
 def confirm_recharge(recharge_id):
     recharge = Recharge.query.get_or_404(recharge_id)
     recharge.status = "confirmed"
@@ -305,7 +297,7 @@ def confirm_recharge(recharge_id):
     return redirect(url_for("admin_recharges"))
 
 @app.route("/admin/recharges/<int:recharge_id>/reject", methods=["POST"])
-@login_required()
+@login_required
 def reject_recharge(recharge_id):
     recharge = Recharge.query.get_or_404(recharge_id)
     recharge.status = "rejected"
@@ -313,86 +305,168 @@ def reject_recharge(recharge_id):
     flash(f"Recharge {recharge.transaction_id} rejected for {recharge.user.email}", "danger")
     return redirect(url_for("admin_recharges"))
 
-@app.route("/recharge", methods=["POST"])
-@login_required()
-def submit_recharge():
-    user = get_current_user()
-    amount = request.form.get("amount")
-    provider = request.form.get("provider")
-    transaction_id = request.form.get("transaction_id")
-    screenshot_file = request.files.get("screenshot")
+# -------------------------
+# Withdrawals
+# -------------------------
+@app.route("/admin/withdrawals")
+def admin_withdrawals():
+    withdrawals = Withdrawal.query.order_by(Withdrawal.created_at.desc()).all()
+    return render_template("admin_withdrawals.html", withdrawals=withdrawals)
 
-    filename = None
-    if screenshot_file:
-        from werkzeug.utils import secure_filename
-        import os
-        filename = secure_filename(screenshot_file.filename)
-        upload_folder = os.path.join(app.root_path, "static", "uploads")
-        os.makedirs(upload_folder, exist_ok=True)
-        screenshot_file.save(os.path.join(upload_folder, filename))
-
-    new_recharge = Recharge(
-        user_id=user.id,
-        amount=int(amount),
-        provider=provider,
-        transaction_id=transaction_id,
-        screenshot_filename=filename,
-        status="pending"
-    )
-    db.session.add(new_recharge)
+@app.route("/admin/withdrawals/<int:withdrawal_id>/paid", methods=["POST"])
+def mark_paid(withdrawal_id):
+    withdrawal = Withdrawal.query.get_or_404(withdrawal_id)
+    withdrawal.status = "Paid"
     db.session.commit()
+    flash(f"Withdrawal {withdrawal.id} marked as Paid.")
+    return redirect(url_for("admin_withdrawals"))
 
-    flash("Recharge request submitted successfully! Pending admin approval.", "success")
+@app.route("/admin/withdrawals/<int:withdrawal_id>/reject", methods=["POST"])
+def reject_withdrawal(withdrawal_id):
+    withdrawal = Withdrawal.query.get_or_404(withdrawal_id)
+    withdrawal.status = "Rejected"
+    db.session.commit()
+    flash(f"Withdrawal {withdrawal.id} has been Rejected.")
+    return redirect(url_for("admin_withdrawals"))
+
+# -------------------------
+# Wallet / Deposit / Withdraw
+# -------------------------
+@app.route("/wallet")
+def wallet():
+    user_id = session.get("user_id")
+    if not user_id:
+        flash("Please log in first.")
+        return redirect(url_for("login"))
+    user = User.query.get(user_id)
+    return render_template("wallet.html", user=user)
+
+@app.route("/checkin", methods=["POST"])
+@login_required
+def checkin():
+    user = current_user
+    if user.checkin(reward=10):
+        db.session.commit()
+        flash("✅ You’ve successfully checked in! +10 KSh added 🎉", "success")
+    else:
+        flash("⚠️ Already claimed! Come back after 24 hours ⏳", "warning")
     return redirect(url_for("dashboard"))
 
+@app.route("/deposit", methods=["POST"])
+def deposit():
+    user_id = session.get("user_id")
+    if not user_id:
+        flash("Please log in first.")
+        return redirect(url_for("login"))
+    amount = int(request.form["amount"])
+    user = User.query.get(user_id)
+    user.wallet_balance = (user.wallet_balance or 0) + amount
+    db.session.commit()
+    flash(f"Deposited {amount} KES successfully!")
+    return redirect(url_for("wallet"))
+
+@app.route("/withdraw_page", methods=["GET", "POST"])
+def withdraw_page():
+    user_id = session.get("user_id")
+    if not user_id:
+        flash("Please log in first.")
+        return redirect(url_for("login"))
+
+    user = User.query.get(user_id)
+
+    if request.method == "POST":
+        account_number = request.form["account_number"]
+        recipient_name = request.form["recipient_name"]
+        bank_name = request.form["bank_name"]
+        amount = float(request.form["amount"])
+
+        if (user.wallet_balance or 0) >= amount:
+            user.wallet_balance -= amount
+            withdrawal = Withdrawal(
+                user_id=user.id,
+                account_number=account_number,
+                recipient_name=recipient_name,
+                bank_name=bank_name,
+                amount=amount,
+                status="Pending"
+            )
+            db.session.add(withdrawal)
+            db.session.commit()
+            flash("Withdrawal request submitted successfully!")
+        else:
+            flash("Insufficient balance!")
+
+        return redirect(url_for("withdraw_page"))
+
+    withdrawals = Withdrawal.query.filter_by(user_id=user.id).all()
+    return render_template("withdraw.html", current_user=user, withdrawals=withdrawals)
+
+@app.route("/withdraw", methods=["GET", "POST"])
+@login_required
+def withdraw():
+    user = current_user
+
+    if request.method == "POST":
+        account_number = request.form["account_number"]
+        recipient_name = request.form["recipient_name"]
+        bank_name = request.form["bank_name"]
+        amount = float(request.form["amount"])
+
+        if (user.wallet_balance or 0) >= amount:
+            # Deduct balance
+            user.wallet_balance -= amount
+
+            # Record withdrawal
+            new_withdrawal = Withdrawal(
+                user_id=user.id,
+                account_number=account_number,
+                recipient_name=recipient_name,
+                bank_name=bank_name,
+                amount=amount,
+                status="Pending"
+            )
+            db.session.add(new_withdrawal)
+            db.session.commit()
+
+            flash(f"Withdrew {amount} KES successfully!", "withdrawal")
+        else:
+            flash("Insufficient balance!", "withdrawal")
+
+        return redirect(url_for("withdraw"))
+
+    # GET → show page with history
+    withdrawals = Withdrawal.query.filter_by(user_id=user.id).order_by(Withdrawal.created_at.desc()).all()
+    return render_template("withdraw.html", withdrawals=withdrawals)
+
 # -------------------------
-# Dashboard & user actions
+# Dashboard & Mine
 # -------------------------
 @app.route("/dashboard")
-@login_required()
+@login_required
 def dashboard():
-    """
-    Private dashboard. Requires login via @login_required.
-    """
-    user = get_current_user()                    
-    recharges=Recharge.query.filter_by(user_id=user.id).order_by(Recharge.created_at.desc()).all()
+    # current_user is automatically set by Flask-Login
+    user = current_user  
+
+    # Query only if the user is authenticated
+    recharges = Recharge.query.filter_by(user_id=user.id).order_by(Recharge.created_at.desc()).all()
+
     return render_template("dashboard.html", user=user, recharges=recharges)
 
-    # Prepare safe subscription list for template
-    subs = []
-    if hasattr(user, "subscriptions") and user.subscriptions:
-        try:
-            subs = list(user.subscriptions)
-        except Exception:
-            subs = user.subscriptions or []
+@app.route("/financial")
+@login_required
+def financial():
+    user = get_current_user()
+    available_balance = f"KSh{user.wallet_balance:.2f}" if getattr(user, "wallet_balance", None) else "KSh0.00"
+    total_withdraw = f"KSh{getattr(user, 'total_withdraw', 0):.2f}"
+    total_recharge = f"KSh{getattr(user, 'total_recharge', 0):.2f}"
+    return render_template("financial.html",
+                           available_balance=available_balance,
+                           total_withdraw=total_withdraw,
+                           total_recharge=total_recharge,
+                           user=user)
 
-    products = [
-        {"name": "MetaEarn 1", "sku": "ME1", "price": "KSh100"},
-        {"name": "MetaEarn 10", "sku": "ME10", "price": "KSh900"},
-    ]
-
-    available_balance = f"KSh{user.wallet_balance:.2f}" if getattr(user, "wallet_balance", None) is not None else "KSh0.00"
-
-    try:
-        return render_template("dashboard.html",
-                               user=user,
-                               subs=subs,
-                               products=products,
-                               available_balance=available_balance)
-    except Exception as e:
-        print("TEMPLATE ERROR while rendering dashboard.html:")
-        traceback.print_exc()
-        return render_template_string("""
-            <h1>Dashboard rendering error</h1>
-            <pre>{{ err }}</pre>
-            <p>Check server console for full traceback.</p>
-        """, err=str(e)), 500
-
-# -------------------------
-# Mine page (balances)
-# -------------------------
 @app.route("/mine")
-@login_required()
+@login_required
 def mine():
     user = get_current_user()
     context = {
@@ -411,7 +485,7 @@ def page_not_found(e):
     return render_template("404.html"), 404
 
 # -------------------------
-# Run (development)
+# Run
 # -------------------------
 if __name__ == "__main__":
     app.run(debug=True)

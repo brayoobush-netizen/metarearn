@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Admin Withdrawals Dashboard</h2>
+<table class="table table-bordered table-striped">
+  <thead class="table-dark">
+    <tr>
+      <th>ID</th>
+      <th>User ID</th>
+      <th>Account Number</th>
+      <th>Recipient</th>
+      <th>Bank</th>
+      <th>Amount</th>
+      <th>Status</th>
+      <th>Date</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for w in withdrawals %}
+    <tr>
+      <td>{{ w.id }}</td>
+      <td>{{ w.user_id }}</td>
+      <td>{{ w.account_number }}</td>
+      <td>{{ w.recipient_name }}</td>
+      <td>{{ w.bank_name }}</td>
+      <td>${{ "%.2f"|format(w.amount) }}</td>
+      <td>{{ w.status }}</td>
+      <td>{{ w.created_at.strftime("%Y-%m-%d %H:%M") }}</td>
+      <td>
+        {% if w.status == "Pending" %}
+          <form method="POST" action="{{ url_for('mark_paid', withdrawal_id=w.id) }}" style="display:inline;">
+            <button type="submit" class="btn btn-success btn-sm">Mark Paid</button>
+          </form>
+          <form method="POST" action="{{ url_for('reject_withdrawal', withdrawal_id=w.id) }}" style="display:inline;">
+            <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+          </form>
+        {% else %}
+          <span class="badge bg-secondary">{{ w.status }}</span>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}
