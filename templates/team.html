@@ -1,125 +1,24 @@
-<!-- templates/team.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Team</title>
+  <title>Team Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { 
-      font-family: 'Segoe UI', sans-serif; 
-      margin:0; padding:0; 
-      background:#f5f7fa; 
-      color:#333; 
-      line-height:1.6;
-    }
-
-    /* Top bar */
-    .top-bar { 
-      background:#0066cc; 
-      color:#fff; 
-      padding:20px; 
-      text-align:center; 
-      font-size:22px; 
-      font-weight:bold; 
-      letter-spacing:1px;
-      position:sticky; 
-      top:0; 
-      z-index:1000;
-    }
-
-    /* Card style */
-    .card { 
-      background:#fff; 
-      border-radius:12px; 
-      padding:20px; 
-      margin:25px 20px; 
-      box-shadow:0 4px 12px rgba(0,0,0,0.08);
-    }
+    body { font-family: 'Segoe UI', sans-serif; margin:0; padding:0; background:#f5f7fa; color:#333; line-height:1.6; }
+    .top-bar { background:#0066cc; color:#fff; padding:20px; text-align:center; font-size:22px; font-weight:bold; letter-spacing:1px; position:sticky; top:0; z-index:1000; }
+    .card { background:#fff; border-radius:12px; padding:20px; margin:25px 20px; box-shadow:0 4px 12px rgba(0,0,0,0.08); }
     .card h3 { margin:0 0 15px; font-size:18px; color:#0066cc; }
-    .card p { margin:10px 0; }
-
-    /* Colored block header for summary */
-    .summary-header {
-      background:linear-gradient(135deg, #00c6ff, #0072ff);
-      color:#fff;
-      padding:15px;
-      border-radius:8px;
-      font-size:18px;
-      font-weight:bold;
-      text-align:center;
-      margin-bottom:15px;
-    }
-
-    /* Team levels with vertical lines */
-    .team-info {
-      position:relative;
-      padding-left:30px;
-    }
-    .team-info::before {
-      content:"";
-      position:absolute;
-      left:15px;
-      top:0;
-      bottom:0;
-      width:2px;
-      background:#ccc;
-    }
-    .team-level { 
-      display:flex; 
-      justify-content:space-between; 
-      align-items:center;
-      padding:14px 0; 
-      position:relative;
-    }
-    .team-level span { font-size:15px; }
-    .team-level button {
-      background:#0066cc;
-      color:#fff;
-      border:none;
-      padding:6px 12px;
-      border-radius:6px;
-      cursor:pointer;
-      font-size:13px;
-      transition:0.3s;
-    }
-    .team-level button:hover { background:#004999; }
-
-    /* Invitation section */
-    .invite p { margin:14px 0; }
-    .invite button { 
-      background:#28a745; 
-      color:#fff; 
-      border:none; 
-      padding:8px 16px; 
-      cursor:pointer; 
-      border-radius:6px; 
-      font-size:14px; 
-      transition:0.3s;
-    }
+    .summary-header { background:linear-gradient(135deg, #00c6ff, #0072ff); color:#fff; padding:15px; border-radius:8px; font-size:18px; font-weight:bold; text-align:center; margin-bottom:15px; }
+    .team-level { margin-bottom:20px; }
+    .team-level span { font-size:15px; font-weight:bold; }
+    .badge { padding:4px 8px; border-radius:6px; font-size:12px; }
+    .bg-success { background:#28a745; color:#fff; }
+    .bg-secondary { background:#6c757d; color:#fff; }
+    .invite button { background:#28a745; color:#fff; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:13px; }
     .invite button:hover { background:#218838; }
-
-    /* Rule section */
-    .rule { font-size:14px; color:#555; }
-
-    /* Bottom navigation */
-    .bottom-nav { 
-      position:fixed; bottom:0; left:0; right:0; 
-      display:flex; 
-      background:#fff; 
-      border-top:1px solid #ddd; 
-      box-shadow:0 -2px 6px rgba(0,0,0,0.05);
-    }
-    .bottom-nav a { 
-      flex:1; 
-      text-align:center; 
-      padding:14px 0; 
-      text-decoration:none; 
-      color:#0066cc; 
-      font-size:15px; 
-      font-weight:500;
-      transition:0.3s;
-    }
+    .bottom-nav { position:fixed; bottom:0; left:0; right:0; display:flex; background:#fff; border-top:1px solid #ddd; box-shadow:0 -2px 6px rgba(0,0,0,0.05); }
+    .bottom-nav a { flex:1; text-align:center; padding:14px 0; text-decoration:none; color:#0066cc; font-size:15px; font-weight:500; transition:0.3s; }
     .bottom-nav a:hover { background:#f0f0f0; }
   </style>
 </head>
@@ -130,74 +29,133 @@
   <!-- Summary -->
   <div class="card">
     <div class="summary-header">📊 Team Summary</div>
-    <p>Total investment: <b>KSh0</b></p>
-    <p>Total people: <b>0</b></p>
-    <p>Total rebate: <b>KSh0</b></p>
+    <p>Total investment: <b>KSh {{ total_investment }}</b></p>
+    <p>Total people: <b>{{ total_people }}</b></p>
+    <p>Total rebate: <b>KSh {{ total_rebate }}</b></p>
   </div>
 
   <!-- Team Information -->
-  <div class="card team-info">
+  <div class="card">
     <h3>Team Information</h3>
+
+    <!-- Lv1 -->
     <div class="team-level">
       <span>🥇 Lv1. (Rebate: 9%)</span>
-      <span>KSh0 Rebate | 0 People</span>
-      <button>View Lv1</button>
+      <div>
+        {% for u in lv1 %}
+          <p>{{ u.email }}
+            {% if u.purchases %}
+              <span class="badge bg-success">Active</span>
+            {% else %}
+              <span class="badge bg-secondary">Inactive</span>
+            {% endif %}
+          </p>
+        {% else %}
+          <p>No Lv1 referrals yet.</p>
+        {% endfor %}
+      </div>
     </div>
+
+    <!-- Lv2 -->
     <div class="team-level">
       <span>🥈 Lv2. (Rebate: 2%)</span>
-      <span>KSh0 Rebate | 0 People</span>
-      <button>View Lv2</button>
+      <div>
+        {% for u in lv2 %}
+          <p>{{ u.email }}
+            {% if u.purchases %}
+              <span class="badge bg-success">Active</span>
+            {% else %}
+              <span class="badge bg-secondary">Inactive</span>
+            {% endif %}
+          </p>
+        {% else %}
+          <p>No Lv2 referrals yet.</p>
+        {% endfor %}
+      </div>
     </div>
+
+    <!-- Lv3 -->
     <div class="team-level">
       <span>🥉 Lv3. (Rebate: 1%)</span>
-      <span>KSh0 Rebate | 0 People</span>
-      <button>View Lv3</button>
+      <div>
+        {% for u in lv3 %}
+          <p>{{ u.email }}
+            {% if u.purchases %}
+              <span class="badge bg-success">Active</span>
+            {% else %}
+              <span class="badge bg-secondary">Inactive</span>
+            {% endif %}
+          </p>
+        {% else %}
+          <p>No Lv3 referrals yet.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Referral Stats Dashboard -->
+  <div class="card">
+    <div class="summary-header" style="background:linear-gradient(135deg,#ff9a9e,#fad0c4);">
+      🎯 Referral Dashboard
+    </div>
+    <div style="display:flex; justify-content:space-around; text-align:center; margin:20px 0;">
+      <div>
+        <h2 style="color:#0066cc; margin:0;">{{ lv1|length }}</h2>
+        <p style="margin:0;">Lv1 Referrals</p>
+      </div>
+      <div>
+        <h2 style="color:#28a745; margin:0;">{{ lv2|length }}</h2>
+        <p style="margin:0;">Lv2 Referrals</p>
+      </div>
+      <div>
+        <h2 style="color:#ff9800; margin:0;">{{ lv3|length }}</h2>
+        <p style="margin:0;">Lv3 Referrals</p>
+      </div>
+    </div>
+
+    <!-- Progress bars -->
+    <div style="margin-top:15px;">
+      <p>Lv1 Progress</p>
+      <div style="background:#eee; border-radius:8px; overflow:hidden;">
+        <div style="width:{{ lv1|length * 10 }}%; background:#0066cc; height:12px;"></div>
+      </div>
+
+      <p>Lv2 Progress</p>
+      <div style="background:#eee; border-radius:8px; overflow:hidden;">
+        <div style="width:{{ lv2|length * 10 }}%; background:#28a745; height:12px;"></div>
+      </div>
+
+      <p>Lv3 Progress</p>
+      <div style="background:#eee; border-radius:8px; overflow:hidden;">
+        <div style="width:{{ lv3|length * 10 }}%; background:#ff9800; height:12px;"></div>
+      </div>
     </div>
   </div>
 
   <!-- Invitation -->
   <div class="card invite">
     <h3>Invite Friends 🚀</h3>
-    <p>🔑 Invitation code: <b>589sy71656</b> <button>Copy</button></p>
+    <p>🔑 Invitation code: <b>{{ current_user.referral_code }}</b>
+      <button onclick="navigator.clipboard.writeText('{{ current_user.referral_code }}')">Copy</button>
+    </p>
     <p>🔗 Invitation link:<br>
-      <small>https://leas.com.solsamrt.lat/tid?code=589sy71656</small>
-      <button>Copy</button>
+      <small>{{ url_for('register', ref=current_user.referral_code, _external=True) }}</small>
+      <button onclick="navigator.clipboard.writeText('{{ url_for('register', ref=current_user.referral_code, _external=True) }}')">Copy</button>
     </p>
   </div>
 
   <!-- Rule -->
-  <div class="card rule">
+  <div class="card">
     <p>💡 Invite your friends to register and join us. You’ll earn <b>9% + 2% + 1%</b> cashback from your team’s investments.</p>
   </div>
 
   <!-- Bottom navigation -->
   <nav class="bottom-nav" role="navigation" aria-label="Bottom navigation">
-    <a href="{{ url_for('home') }}">
-      <i class="bi bi-house-fill" aria-hidden="true"></i>
-      <span>Home</span>
-    </a>
-
-    <!-- These are still links to product/financial pages; keep them if routes exist.
-         If you prefer buttons here too, replace with <button> and JS navigation. -->
-    <a href="{{ url_for('product') }}">
-      <i class="bi bi-box-seam" aria-hidden="true"></i>
-      <span>Products</span>
-    </a>
-
-    <a href="{{ url_for('financial') }}">
-      <i class="bi bi-bar-chart-fill" aria-hidden="true"></i>
-      <span>Financial</span>
-    </a>
-
-    <a href="{{ url_for('team') }}">
-      <i class="bi bi-people-fill" aria-hidden="true"></i>
-      <span>Team</span>
-    </a>
-
-    <a href="{{ url_for('mine') }}">
-      <i class="bi bi-person-fill" aria-hidden="true"></i>
-      <span>Mine</span>
-    </a>
+    <a href="{{ url_for('home') }}">Home</a>
+    <a href="{{ url_for('product') }}">Products</a>
+    <a href="{{ url_for('financial') }}">Financial</a>
+    <a href="{{ url_for('team') }}">Team</a>
+    <a href="{{ url_for('mine') }}">Mine</a>
   </nav>
 
 </body>

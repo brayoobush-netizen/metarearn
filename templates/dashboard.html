@@ -96,6 +96,8 @@
   </style>
 </head>
 <body>
+
+<input type="hidden" id="userBalance" value="{{ user.balance }}">
   <!-- Top bar -->
   <div class="top-bar">
     <img src="/static/images/metarearnlogo.png" alt="MetaEarn Logo" class="logo">
@@ -162,7 +164,10 @@ MetaEarn â€” founded in 2013, empowering users with daily income opportunities â
   <i class="bi bi-cash-coin"></i>
   <p>Withdraw</p>
 </a>
-    <div class="icon-box"><i class="bi bi-bank2"></i><p>Bank</p></div>
+    <a href="{{ url_for('bank_history') }}" class="icon-box">
+  <i class="bi bi-bank2"></i>
+  <p>Bank</p>
+</a>
     <form action="{{ url_for('checkin') }}" method="post" class="icon-box">
       <button type="submit" class="btn btn-success w-100"><i class="bi bi-calendar-event-fill"></i><p>Check In</p></button>
     </form>
@@ -180,9 +185,10 @@ MetaEarn â€” founded in 2013, empowering users with daily income opportunities â
     <p>Price: KSh250</p>
     <p>Income: KSh50/day</p>
     <p>Period: 8 days</p>
-    <p>Upline: 25</p>
-    <button class="btn btn-success w-100">Buy</button>
-  </div>
+    <p>Quantity: <span class="quantity">0/1</span></p>
+    <button class="btn btn-success w-100 buy-btn">Buy</button>
+</div>
+
 </div>
 
   <div class="product-card">
@@ -307,36 +313,105 @@ MetaEarn â€” founded in 2013, empowering users with daily income opportunities â
 
   </div>
 
+<div id="flash-container" style="
+  position:fixed; 
+  top:20px; 
+  right:20px; 
+  z-index:9999; 
+  max-width:300px;">
+</div>
+
   <!-- Bottom Navigation -->
-  <nav class="bottom-nav" role="navigation" aria-label="Bottom navigation">
-    <a href="{{ url_for('home') }}">
-      <i class="bi bi-house-fill" aria-hidden="true"></i>
-      <span>Home</span>
-    </a>
+<nav class="bottom-nav" role="navigation" aria-label="Bottom navigation">
+  <a href="{{ url_for('dashboard') }}">
+    <i class="bi bi-house-fill" aria-hidden="true"></i>
+    <span>Home</span>
+  </a>
 
-    <a href="{{ url_for('product') }}">
-      <i class="bi bi-box-seam" aria-hidden="true"></i>
-      <span>Product</span>
-    </a>
+  <a href="{{ url_for('product') }}">
+    <i class="bi bi-box-seam" aria-hidden="true"></i>
+    <span>Product</span>
+  </a>
 
-    <a href="{{ url_for('financial') }}">
-      <i class="bi bi-bar-chart-fill" aria-hidden="true"></i>
-      <span>Financial</span>
-    </a>
+  <a href="{{ url_for('financial') }}">
+    <i class="bi bi-bar-chart-fill" aria-hidden="true"></i>
+    <span>Financial</span>
+  </a>
 
-    <a href="{{ url_for('team') }}">
-      <i class="bi bi-people-fill" aria-hidden="true"></i>
-      <span>Team</span>
-    </a>
+  <a href="{{ url_for('team') }}">
+    <i class="bi bi-people-fill" aria-hidden="true"></i>
+    <span>Team</span>
+  </a>
 
-    <a href="{{ url_for('mine') }}">
-      <i class="bi bi-person-fill" aria-hidden="true"></i>
-      <span>Mine</span>
-    </a>
-  </nav>
+  <a href="{{ url_for('mine') }}">
+    <i class="bi bi-person-fill" aria-hidden="true"></i>
+    <span>Mine</span>
+  </a>
+</nav>
 
   <footer style="display:none;"></footer>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+function showFlashMessage(message, type="success") {
+  const flashContainer = document.getElementById("flash-container");
+  const flash = document.createElement("div");
+  flash.className = `alert alert-${type} mt-2`;
+  flash.textContent = message;
+  flash.style.opacity = "0";
+  flash.style.transition = "opacity 0.5s ease";
+
+  flashContainer.appendChild(flash);
+
+  setTimeout(() => flash.style.opacity = "1", 50);
+  setTimeout(() => {
+    flash.style.opacity = "0";
+    setTimeout(() => flash.remove(), 500);
+  }, 3000);
+}
+
+document.querySelectorAll(".buy-btn").forEach(btn => {
+  btn.addEventListener("click", function() {
+    const card = this.closest(".product-card");
+    const price = parseInt(card.dataset.price);
+    const quantityEl = card.querySelector(".quantity");
+    const userBalanceEl = document.getElementById("userBalance");
+
+    if (!userBalanceEl) {
+      console.error("Missing #userBalance field");
+      return;
+    }
+
+    const userBalance = parseInt(userBalanceEl.value);
+
+    if (userBalance < price) {
+      showFlashMessage("Insufficient balance!", "danger");
+      return;
+    }
+
+    if (quantityEl.textContent === "1/1") {
+      showFlashMessage("This product is already sold out!", "warning");
+      return;
+    }
+
+    if (confirm(`Confirm purchase for KSh${price}?`)) {
+      userBalanceEl.value = userBalance - price;
+      quantityEl.textContent = "1/1";
+      this.disabled = true;
+      this.classList.remove("btn-success");
+      this.classList.add("btn-secondary");
+      this.textContent = "Sold Out";
+      showFlashMessage("Purchase successful!", "success");
+
+      fetch("/buy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId: card.dataset.id, price: price })
+      });
+    }
+  });
+});
+</script>
 </body>
 </html>

@@ -26,32 +26,36 @@
 <body>
 
   <!-- Balance Panel -->
-  <div class="container mt-3">
-    <div class="balance-panel">
-      <h5>Available Balance: <strong>KSh10</strong></h5>
-      <p>Total Withdraw: KSh0</p>
-      <p>Total Recharge: KSh0</p>
-    </div>
+  <div class="balance-panel">
+  <h5>Available Balance: <strong>{{ available_balance }}</strong></h5>
+  <p>Total Withdraw: {{ total_withdraw }}</p>
+  <p>Total Recharge: {{ total_recharge }}</p>
+</div>
 
     <!-- Quick Actions -->
-    <div class="quick-actions">
-      <div class="action">
-        <i class="bi bi-wallet2 fs-3"></i>
-        <div>Recharge</div>
-      </div>
-      <div class="action">
-        <i class="bi bi-cash-stack fs-3"></i>
-        <div>Withdraw</div>
-      </div>
-      <div class="action">
-        <i class="bi bi-person-circle fs-3"></i>
-        <div>Account</div>
-      </div>
-      <div class="action">
-        <i class="bi bi-receipt fs-3"></i>
-        <div>Bills</div>
-      </div>
-    </div>
+<div class="quick-actions">
+  <a href="{{ url_for('recharge') }}" class="action">
+    <i class="bi bi-wallet2 fs-3"></i>
+    <div>Recharge</div>
+  </a>
+
+  <a href="{{ url_for('withdraw') }}" class="action">
+    <i class="bi bi-cash-stack fs-3"></i>
+    <div>Withdraw</div>
+  </a>
+
+  <a href="{{ url_for('account') }}" class="action">
+    <i class="bi bi-person-circle fs-3"></i>
+    <div>Account</div>
+  </a>
+
+  <a href="{{ url_for('bills') }}" class="action">
+    <i class="bi bi-receipt fs-3"></i>
+    <div>Bills</div>
+  </a>
+</div>
+
+
 
     <!-- Banner -->
     <div class="banner">
@@ -61,11 +65,13 @@
 
     <!-- Menu List -->
     <div class="menu-list">
-      <a href="#"><i class="bi bi-key"></i> Password</a>
+      <a href="{{ url_for('password') }}"><i class="bi bi-key"></i> Password</a>
+
       <a href="#"><i class="bi bi-info-circle"></i> About Us</a>
-      <a href="#"><i class="bi bi-journal-text"></i> Deposit History</a>
-      <a href="#"><i class="bi bi-journal-arrow-down"></i> Withdraw History</a>
-      <a href="#"><i class="bi bi-box-arrow-right"></i> Log Out</a>
+      <a href="{{ url_for('deposit_history') }}"><i class="bi bi-journal-text"></i> Deposit History</a>
+  <a href="{{ url_for('withdraw_history') }}"><i class="bi bi-journal-arrow-down"></i> Withdraw History</a>
+
+   <a href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Log Out</a>
       <a href="#"><i class="bi bi-download"></i> Download</a>
     </div>
 

@@ -1,8 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from datetime import datetime
-from sqlalchemy import Column, DateTime
-
+import uuid
 
 db = SQLAlchemy()
 
@@ -19,16 +18,20 @@ class User(db.Model, UserMixin):
     total_withdraw = db.Column(db.Float, default=0.0)
     total_recharge = db.Column(db.Float, default=0.0)
     profile_image = db.Column(db.String(200))
-
-    # ✅ New field to track daily check‑in
     last_checkin = db.Column(db.DateTime, nullable=True)
 
-    # relationships
-    recharges = db.relationship("Recharge", backref="user", lazy=True)
-    withdrawals = db.relationship("Withdrawal", backref="user", lazy=True)
+    # Referral system
+    referral_code = db.Column(db.String(20), unique=True, default=lambda: str(uuid.uuid4())[:8])
+    referred_by = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=True)
+    referrals = db.relationship("User", backref=db.backref("referrer", remote_side=[id]))
 
+    # Relationships
+    recharges = db.relationship("Recharge", back_populates="user", lazy=True)
+    withdrawals = db.relationship("Withdrawal", back_populates="user", lazy=True)
+    purchases = db.relationship("Purchase", back_populates="user", lazy=True)
+
+    # Helper methods
     def add_views(self, views: int):
-        """Helper method to add views and update earnings."""
         rate_per_view = 0.025
         earnings = views * rate_per_view
         self.total_views += views
@@ -37,14 +40,12 @@ class User(db.Model, UserMixin):
         return earnings
 
     def can_checkin(self):
-        """Check if user can claim daily reward (after 24h)."""
         if self.last_checkin is None:
             return True
         elapsed = (datetime.utcnow() - self.last_checkin).total_seconds()
-        return elapsed >= 86400  # 24 hours in seconds
+        return elapsed >= 86400  # 24 hours
 
     def checkin(self, reward=10):
-        """Grant daily check‑in reward if eligible."""
         if self.can_checkin():
             self.wallet_balance += reward
             self.last_checkin = datetime.utcnow()
@@ -64,6 +65,9 @@ class Withdrawal(db.Model):
     status = db.Column(db.String(50), default="Pending")
     created_at = db.Column(db.DateTime, default=db.func.now())
 
+    # Relationship back to User
+    user = db.relationship("User", back_populates="withdrawals")
+
 
 class Recharge(db.Model):
     __tablename__ = "recharges"
@@ -76,3 +80,23 @@ class Recharge(db.Model):
     screenshot_filename = db.Column(db.String(200))
     status = db.Column(db.String(20), default="pending")
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Relationship back to User
+    user = db.relationship("User", back_populates="recharges")
+
+
+class Purchase(db.Model):
+    __tablename__ = "purchase"
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    product_sku = db.Column(db.String(50), nullable=False)
+    product_name = db.Column(db.String(120), nullable=False)
+    price = db.Column(db.Float, nullable=False)
+    income_per_day = db.Column(db.Float, nullable=False)
+    period_days = db.Column(db.Integer, nullable=False)
+    start_date = db.Column(db.DateTime, default=datetime.utcnow)
+    end_date = db.Column(db.DateTime)
+
+    # Relationship back to User
+    user = db.relationship("User", back_populates="purchases")

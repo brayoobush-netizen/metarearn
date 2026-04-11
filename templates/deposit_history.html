@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Your Recharge Requests</h2>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>ID</th><th>Amount</th><th>Provider</th><th>Transaction ID</th><th>Status</th><th>Created At</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in recharges %}
+    <tr>
+      <td>{{ r.id }}</td>
+      <td>{{ r.amount }}</td>
+      <td>{{ r.provider }}</td>
+      <td>{{ r.transaction_id }}</td>
+      <td>
+        {% if r.status == "confirmed" %}
+          <span class="status-badge status-confirmed">Confirmed</span>
+        {% elif r.status == "rejected" %}
+          <span class="status-badge status-rejected">Rejected</span>
+        {% else %}
+          <span class="status-badge status-pending">Pending</span>
+        {% endif %}
+      </td>
+      <td>{{ r.created_at }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

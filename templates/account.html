@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <title>Account Settings</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(180deg, #6a11cb, #2575fc);
+      color: #fff;
+      font-family: 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      overflow-y: scroll;
+    }
+    .account-container {
+      max-width: 800px;
+      margin: 40px auto;
+      background: rgba(255,255,255,0.1);
+      border-radius: 15px;
+      padding: 30px;
+      backdrop-filter: blur(10px);
+    }
+    .profile-pic {
+      border-radius: 50%;
+      border: 4px solid #fff;
+      width: 120px;
+      height: 120px;
+      object-fit: cover;
+      margin-bottom: 20px;
+    }
+    .form-control, .form-select {
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+      border: none;
+    }
+    .btn-custom {
+      background: #ff6a00;
+      border: none;
+      color: #fff;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+    .btn-custom:hover {
+      background: #ff9500;
+    }
+  </style>
+</head>
+<body>
+  <div class="account-container text-center">
+    <h1 class="mb-4">🌟 Account Settings</h1>
+
+    <!-- Profile Picture -->
+    <img src="{{ user.profile_pic or '/static/default-avatar.png' }}" class="profile-pic" alt="Profile Picture">
+    <form method="post" enctype="multipart/form-data" action="{{ url_for('upload_profile_pic') }}">
+      <input type="file" name="profile_pic" class="form-control mb-3">
+      <button type="submit" class="btn btn-custom">Update Picture</button>
+    </form>
+
+    <!-- Email Verification -->
+    <p class="mt-4">📧 Email: {{ user.email }}
+      {% if user.email_verified %}
+        <span class="badge bg-success">Verified</span>
+      {% else %}
+        <span class="verified-badge">✔ Verified</span>
+      {% endif %}
+    </p>
+
+    <!-- Editable Fields -->
+    <form method="post" action="{{ url_for('update_account') }}" class="mt-4 text-start">
+      <div class="mb-3">
+        <label class="form-label">Username</label>
+        <input type="text" name="username" value="{{ user.username }}" class="form-control">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Nationality</label>
+        <select name="nationality" class="form-select">
+          <option value="Kenya">Kenya</option>
+          <option value="Uganda">Uganda</option>
+          <option value="Tanzania">Tanzania</option>
+          <option value="Rwanda">Rwanda</option>
+          <option value="Ethiopia">Ethiopia</option>
+        </select>
+      </div>
+
+      <button type="submit" class="btn btn-custom w-100">💾 Save Changes</button>
+    </form>
+  </div>
+</body>
+</html>

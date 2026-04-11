@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Daily Check-In</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f9fafc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .checkin-box {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .checkin-box h1 {
+            margin-bottom: 1rem;
+            color: #333;
+        }
+        .checkin-box button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .checkin-box button:hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="checkin-box">
+        <h1>Daily Check-In</h1>
+        <form action="{{ url_for('checkin') }}" method="POST">
+            <button type="submit">Check In ✅</button>
+        </form>
+    </div>
+</body>
+</html>

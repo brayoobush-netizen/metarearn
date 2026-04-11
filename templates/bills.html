@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <title>My Bills</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(180deg, #ff512f, #dd2476);
+      color: #fff;
+      font-family: 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      overflow-y: scroll;
+    }
+    .bills-container {
+      max-width: 900px;
+      margin: 40px auto;
+      background: rgba(255,255,255,0.1);
+      border-radius: 15px;
+      padding: 30px;
+      backdrop-filter: blur(10px);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 12px;
+      text-align: center;
+    }
+    th {
+      background: rgba(255,255,255,0.2);
+    }
+    tr:nth-child(even) {
+      background: rgba(255,255,255,0.1);
+    }
+    .status-paid {
+      color: #00ff88;
+      font-weight: bold;
+    }
+    .status-pending {
+      color: #ffcc00;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="bills-container">
+    <h1 class="text-center mb-4">💡 My Bills</h1>
+    <table class="table table-borderless text-white">
+      <thead>
+        <tr>
+          <th>Bill</th>
+          <th>Amount</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for bill in bills %}
+        <tr>
+          <td>{{ bill.name }}</td>
+          <td>{{ bill.amount }}</td>
+          <td>
+            {% if bill.status == "Paid" %}
+              <span class="status-paid">✔ Paid</span>
+            {% else %}
+              <span class="status-pending">⏳ Pending</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

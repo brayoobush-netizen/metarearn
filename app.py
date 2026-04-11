@@ -1,15 +1,17 @@
 from flask import (
-    Flask, render_template, render_template_string, request,
+    Flask, render_template, request,
     redirect, url_for, session, flash, send_from_directory, abort
 )
 from datetime import datetime, timedelta
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import func
 from flask_migrate import Migrate
-from flask_login import LoginManager, current_user, login_required, login_user
+from flask_login import (
+    LoginManager, current_user, login_required, login_user, logout_user
+)
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-from models import db, User, Recharge, Withdrawal
+from models import db, User, Recharge, Withdrawal, Purchase   # ✅ include Purchase too
 import random
 import os
 import traceback
@@ -20,16 +22,22 @@ from sendgrid.helpers.mail import Mail
 # App setup
 # -------------------------
 app = Flask(__name__, static_folder="static", template_folder="templates")
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///users.db"
+
+# Config
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///users.db")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.secret_key = os.environ.get("SECRET_KEY", "dev_secret")
 
+# Database + migrations
 db.init_app(app)
 migrate = Migrate(app, db)
 
 with app.app_context():
     db.create_all()
 
+# -------------------------
+# Login Manager
+# -------------------------
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
@@ -76,22 +84,47 @@ def features():
     return render_template("features.html")
 
 @app.route("/product")
+@login_required
 def product():
-    sample_products = [
-        {"name": "MetaEarn 1", "sku": "ME1", "price": "KSh100"},
-        {"name": "MetaEarn 10", "sku": "ME10", "price": "KSh900"},
-    ]
-    return render_template("product.html", products=sample_products)
+    active_purchases = current_user.purchases
+    return render_template("product.html", purchases=active_purchases, user=current_user)
 
 @app.route("/team")
+@login_required
 def team():
-    return render_template("team.html")
+    # Level 1: direct referrals
+    lv1 = current_user.referrals
+
+    # Level 2: referrals of Lv1
+    lv2 = [u for ref in lv1 for u in ref.referrals]
+
+    # Level 3: referrals of Lv2
+    lv3 = [u for ref in lv2 for u in ref.referrals]
+
+    # Totals for summary card
+    total_people = len(lv1) + len(lv2) + len(lv3)
+    total_investment = sum(p.price for u in lv1+lv2+lv3 for p in u.purchases)
+    total_rebate = (
+        sum(p.price * 0.09 for u in lv1 for p in u.purchases) +
+        sum(p.price * 0.02 for u in lv2 for p in u.purchases) +
+        sum(p.price * 0.01 for u in lv3 for p in u.purchases)
+    )
+
+    return render_template(
+        "team.html",
+        lv1=lv1,
+        lv2=lv2,
+        lv3=lv3,
+        total_people=total_people,
+        total_investment=total_investment,
+        total_rebate=total_rebate
+    )
 
 @app.route("/home")
 def home():
     if session.get("user_id"):
         return redirect(url_for("dashboard"))
-    return redirect(url_for("landing"))
+    return redirect(url_for("dashboard"))
 
 # -------------------------
 # Authentication
@@ -103,6 +136,9 @@ def register():
         password = request.form.get("password", "")
         profile_file = request.files.get("profile")
 
+        # Referral code can come from form OR link (?ref=...)
+        ref_code = request.form.get("referral_code") or request.args.get("ref")
+
         if not email or not password:
             flash("Please provide email and password.", "error")
             return redirect(url_for("register"))
@@ -112,7 +148,10 @@ def register():
             flash("Email already registered. Please log in.", "error")
             return redirect(url_for("login"))
 
+        # Hash password
         hashed_pw = generate_password_hash(password)
+
+        # Create new user
         new_user = User(
             email=email,
             password=hashed_pw,
@@ -121,6 +160,16 @@ def register():
             total_earnings=0.0
         )
 
+        # Referral linking
+        if ref_code:
+            inviter = User.query.filter_by(referral_code=ref_code).first()
+            if inviter:
+                new_user.referred_by = inviter.id
+                flash(f"You were referred by {inviter.email}", "success")
+            else:
+                flash("Invalid referral code.", "warning")
+
+        # Handle profile image upload
         if profile_file and allowed_file(profile_file.filename):
             filename = secure_filename(profile_file.filename)
             upload_folder = os.path.join(app.root_path, "static", "uploads")
@@ -132,11 +181,13 @@ def register():
         db.session.add(new_user)
         db.session.commit()
 
+        # OTP generation
         otp = str(random.randint(100000, 999999))
         session["otp"] = otp
         session["pending_user_id"] = new_user.id
         session["pending_email"] = email
 
+        # Send OTP via SendGrid
         try:
             message = Mail(
                 from_email="metarearn@gmail.com",
@@ -154,6 +205,62 @@ def register():
         return redirect(url_for("verify"))
 
     return render_template("register.html")
+
+@app.route("/buy", methods=["POST"])
+@login_required
+def buy_product():
+    data = request.get_json()
+    product_id = data["productId"]
+    price = int(data["price"])
+
+    # Example product lookup (you can store in dict or DB)
+    product_map = {
+        "ME0": {"name": "MetaEarn Intern", "income": 50, "period": 8},
+        "ME1": {"name": "MetaEarn 1", "income": 100, "period": 25},
+        # ... add all others ...
+    }
+
+    if current_user.wallet_balance < price:
+        return jsonify({"error": "Insufficient balance"}), 400
+
+    if any(p.product_sku == product_id for p in current_user.purchases):
+        return jsonify({"error": "Already purchased"}), 400
+
+    current_user.wallet_balance -= price
+
+    product_info = product_map[product_id]
+    purchase = Purchase(
+        user_id=current_user.id,
+        product_sku=product_id,
+        product_name=product_info["name"],
+        price=price,
+        income_per_day=product_info["income"],
+        period_days=product_info["period"],
+        end_date=datetime.utcnow() + timedelta(days=product_info["period"])
+    )
+    db.session.add(purchase)
+    db.session.commit()
+
+    return jsonify({"success": True})
+
+@app.route("/password", methods=["GET", "POST"])
+@login_required
+def password():
+    if request.method == "POST":
+        new_password = request.form.get("new_password")
+        if not new_password or len(new_password) < 6:
+            flash("Password must be at least 6 characters.", "warning")
+            return redirect(url_for("password"))
+
+        current_user.password = generate_password_hash(new_password)
+        db.session.commit()
+
+        session.clear()
+        logout_user()
+        flash("Password updated. Please log in with your new passcode.", "success")
+        return redirect(url_for("login"))
+
+    return render_template("password.html")
 
 @app.route("/verify", methods=["GET", "POST"])
 def verify():
@@ -341,6 +448,85 @@ def wallet():
     user = User.query.get(user_id)
     return render_template("wallet.html", user=user)
 
+@app.route("/deposit-history")
+def deposit_history():
+    # Fetch all recharge requests from DB
+    recharges = Recharge.query.order_by(Recharge.created_at.desc()).all()
+    return render_template("deposit_history.html", recharges=recharges)
+
+@app.route("/withdraw-history")
+def withdraw_history():
+    # Fetch all withdrawal requests from DB
+    withdrawals = Withdrawal.query.order_by(Withdrawal.created_at.desc()).all()
+    return render_template("withdraw_history.html", withdrawals=withdrawals)
+
+@app.route("/bank-history")
+@login_required
+def bank_history():
+    # Fetch both deposits and withdrawals for the current user
+    recharges = Recharge.query.filter_by(user_id=current_user.id).order_by(Recharge.created_at.desc()).all()
+    withdrawals = Withdrawal.query.filter_by(user_id=current_user.id).order_by(Withdrawal.created_at.desc()).all()
+    return render_template("bank_history.html", recharges=recharges, withdrawals=withdrawals)
+
+@app.route("/update_account", methods=["POST"])
+@login_required
+def update_account():
+    user = current_user
+
+    # Get form data
+    username = request.form.get("username")
+    nationality = request.form.get("nationality")
+
+    # Update fields if provided
+    if username:
+        user.username = username
+    if nationality:
+        user.nationality = nationality
+
+    db.session.commit()
+    flash("Account updated successfully!", "success")
+
+    return redirect(url_for("account"))
+
+@app.route("/upload_profile_pic", methods=["POST"])
+@login_required
+def upload_profile_pic():
+    if "profile_pic" not in request.files:
+        flash("No file selected", "error")
+        return redirect(url_for("account"))
+
+    file = request.files["profile_pic"]
+    if file.filename == "":
+        flash("No file selected", "error")
+        return redirect(url_for("account"))
+
+    # Save file to static folder (or better: user-specific folder)
+    filename = secure_filename(file.filename)
+    file.save(os.path.join("static/uploads", filename))
+
+    # Update user profile in DB
+    current_user.profile_pic = f"/static/uploads/{filename}"
+    db.session.commit()
+
+    flash("Profile picture updated!", "success")
+    return redirect(url_for("account"))
+
+@app.route("/bills")
+@login_required
+def bills():
+    # Placeholder bills list
+    sample_bills = [
+        {"name": "Electricity", "amount": "KSh1500", "status": "Pending"},
+        {"name": "Water", "amount": "KSh800", "status": "Paid"},
+    ]
+    return render_template("bills.html", bills=sample_bills)
+
+@app.route("/account")
+@login_required
+def account():
+    user = current_user
+    return render_template("account.html", user=user)
+
 @app.route("/checkin", methods=["POST"])
 @login_required
 def checkin():
@@ -413,10 +599,8 @@ def withdraw():
         amount = float(request.form["amount"])
 
         if (user.wallet_balance or 0) >= amount:
-            # Deduct balance
             user.wallet_balance -= amount
 
-            # Record withdrawal
             new_withdrawal = Withdrawal(
                 user_id=user.id,
                 account_number=account_number,
@@ -434,7 +618,6 @@ def withdraw():
 
         return redirect(url_for("withdraw"))
 
-    # GET → show page with history
     withdrawals = Withdrawal.query.filter_by(user_id=user.id).order_by(Withdrawal.created_at.desc()).all()
     return render_template("withdraw.html", withdrawals=withdrawals)
 
@@ -455,26 +638,31 @@ def dashboard():
 @app.route("/financial")
 @login_required
 def financial():
-    user = get_current_user()
-    available_balance = f"KSh{user.wallet_balance:.2f}" if getattr(user, "wallet_balance", None) else "KSh0.00"
-    total_withdraw = f"KSh{getattr(user, 'total_withdraw', 0):.2f}"
-    total_recharge = f"KSh{getattr(user, 'total_recharge', 0):.2f}"
-    return render_template("financial.html",
-                           available_balance=available_balance,
-                           total_withdraw=total_withdraw,
-                           total_recharge=total_recharge,
-                           user=user)
+    user = current_user
+
+    available_balance = f"KSh{(user.wallet_balance or 0):.2f}"
+    total_withdraw = f"KSh{(user.total_withdraw or 0):.2f}"
+    total_recharge = f"KSh{(user.total_recharge or 0):.2f}"
+
+    return render_template(
+        "financial.html",
+        available_balance=available_balance,
+        total_withdraw=total_withdraw,
+        total_recharge=total_recharge,
+        user=user
+    )
 
 @app.route("/mine")
 @login_required
 def mine():
-    user = get_current_user()
+    user = current_user
+
     context = {
-        "available_balance": f"KSh{user.wallet_balance:.2f}",
-        "total_withdraw": f"KSh{getattr(user, 'total_withdraw', 0):.2f}",
-        "total_recharge": f"KSh{getattr(user, 'total_recharge', 0):.2f}",
-        "user": user
-    }
+    "available_balance": f"KSh{(user.wallet_balance or 0):.2f}",
+    "total_withdraw": f"KSh{(user.total_withdraw or 0):.2f}",
+    "total_recharge": f"KSh{(user.total_recharge or 0):.2f}",
+    "user": user
+}
     return render_template("mine.html", **context)
 
 # -------------------------

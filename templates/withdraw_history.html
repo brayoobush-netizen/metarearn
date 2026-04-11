@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>My Withdrawals</h2>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>ID</th><th>Amount</th><th>Bank</th><th>Recipient</th><th>Status</th><th>Created</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for w in withdrawals %}
+    <tr>
+      <td>{{ w.id }}</td>
+      <td>{{ w.amount }}</td>
+      <td>{{ w.bank_name }}</td>
+      <td>{{ w.recipient_name }}</td>
+      <td>{{ w.status }}</td>
+      <td>{{ w.created_at }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

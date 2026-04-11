@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card mb-4 shadow-lg" style="border-radius:14px; background:linear-gradient(135deg,#0d6efd,#6610f2); color:white;">
+  <div class="card-body">
+    <h2 class="fw-bold">Bank Transactions</h2>
+    <p class="mb-0">View all your deposits and withdrawals in one place</p>
+  </div>
+</div>
+
+<!-- Deposits Section -->
+<div class="card mb-4 shadow-sm" style="border-radius:14px;">
+  <div class="card-header bg-success text-white fw-bold">Deposits (Recharges)</div>
+  <div class="card-body p-0">
+    <div class="table-responsive" style="max-height:300px;">
+      <table class="table table-striped table-hover mb-0">
+        <thead class="table-dark">
+          <tr>
+            <th>ID</th>
+            <th>Amount</th>
+            <th>Provider</th>
+            <th>Status</th>
+            <th>Created</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in recharges %}
+          <tr>
+            <td>{{ r.id }}</td>
+            <td>KSh {{ r.amount }}</td>
+            <td>{{ r.provider }}</td>
+            <td>
+              {% if r.status == 'paid' %}
+                <span class="badge bg-success">Paid</span>
+              {% elif r.status == 'pending' %}
+                <span class="badge bg-warning text-dark">Pending</span>
+              {% elif r.status == 'rejected' %}
+                <span class="badge bg-danger">Rejected</span>
+              {% else %}
+                <span class="badge bg-secondary">{{ r.status }}</span>
+              {% endif %}
+            </td>
+            <td>{{ r.created_at }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Withdrawals Section -->
+<div class="card mb-4 shadow-sm" style="border-radius:14px;">
+  <div class="card-header bg-danger text-white fw-bold">Withdrawals</div>
+  <div class="card-body p-0">
+    <div class="table-responsive" style="max-height:300px;">
+      <table class="table table-striped table-hover mb-0">
+        <thead class="table-dark">
+          <tr>
+            <th>ID</th>
+            <th>Amount</th>
+            <th>Institution</th>
+            <th>Recipient</th>
+            <th>Status</th>
+            <th>Created</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for w in withdrawals %}
+          <tr>
+            <td>{{ w.id }}</td>
+            <td>KSh {{ w.amount }}</td>
+            <td>{{ w.bank_name }}</td>
+            <td>{{ w.recipient_name }}</td>
+            <td>
+              {% if w.status == 'Paid' %}
+                <span class="badge bg-success">Paid</span>
+              {% elif w.status == 'Pending' %}
+                <span class="badge bg-warning text-dark">Pending</span>
+              {% elif w.status == 'Rejected' %}
+                <span class="badge bg-danger">Rejected</span>
+              {% else %}
+                <span class="badge bg-secondary">{{ w.status }}</span>
+              {% endif %}
+            </td>
+            <td>{{ w.created_at }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
