@@ -1,276 +1,590 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Recharge</title>
-    <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            margin: 0; 
-            padding: 0; 
-            background: linear-gradient(to bottom, #f0fff4, #e6f7ff); 
-            overflow-y: scroll;
-        }
-        h2 { text-align: center; margin-top: 20px; }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MetaEarn — Recharge</title>
+  <style>
+    :root{
+      --bg-1:#f0fff4;
+      --bg-2:#e6f7ff;
+      --card:#ffffff;
+      --muted:#6b7280;
+      --accent-1:#0f9d58;
+      --accent-2:#2196f3;
+      --glass: rgba(255,255,255,0.06);
+      --glass-2: rgba(16,24,40,0.6);
+      --success:#16a34a;
+      --warning:#f59e0b;
+      --danger:#ef4444;
+      --surface:#0f1724;
+      --text:#0b1220;
+      --radius:12px;
+      --shadow: 0 6px 18px rgba(2,6,23,0.18);
+      --glass-shadow: 0 8px 30px rgba(2,6,23,0.25);
+      --max-width:1100px;
+    }
 
-        /* Green balance card */
-        .balance-card {
-            background: #0f9d58;
-            color: #fff;
-            padding: 20px;
-            margin: 20px auto;
-            border-radius: 12px;
-            width: 90%;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            text-align: center;
-        }
-        .balance-card h3 { margin: 0; font-size: 22px; }
-        .balance-card p { margin: 6px 0; font-size: 16px; }
+    /* Page */
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+      background: linear-gradient(180deg,var(--bg-1),var(--bg-2));
+      color:var(--text);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      line-height:1.4;
+    }
 
-        /* Amount grid */
-        .amount-boxes {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 15px;
-            margin: 20px auto;
-            width: 95%;
-        }
-        .amount-box {
-            padding: 20px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: bold;
-            text-align: center;
-            transition: 0.3s;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            color: #fff;
-            position: relative;
-        }
-        .amount-box:hover {
-            transform: scale(1.08);
-            box-shadow: 0 6px 14px rgba(0,0,0,0.2);
-        }
+    /* Header / Professional top */
+    header{
+      background: linear-gradient(90deg,#071428 0%, #0b2a3a 100%);
+      color:#fff;
+      padding:18px 20px;
+      box-shadow: 0 4px 18px rgba(2,6,23,0.35);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .brand {
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+    .logo {
+      width:44px;height:44px;border-radius:10px;
+      background:linear-gradient(135deg,#ff8c00,#ff0080);
+      display:flex;align-items:center;justify-content:center;
+      font-weight:700;color:#fff;box-shadow:0 6px 18px rgba(255,140,0,0.12);
+    }
+    .brand h1{font-size:1.05rem;margin:0;letter-spacing:0.6px}
+    .brand p{margin:0;font-size:0.85rem;color:rgba(255,255,255,0.85)}
 
-        /* Color progression */
-        .amount-box[data-amount="250"] { background: #4caf50; }
-        .amount-box[data-amount="500"] { background: #43a047; }
-        .amount-box[data-amount="900"] { background: #ff9800; }
-        .amount-box[data-amount="2200"] { background: #2196f3; }
-        .amount-box[data-amount="3500"] { background: #3f51b5; }
-        .amount-box[data-amount="5500"] { background: #e91e63; }
-        .amount-box[data-amount="12000"] { background: #9c27b0; }
-        .amount-box[data-amount="21000"] { background: #f44336; }
-        .amount-box[data-amount="35000"] { background: #ff5722; }
-        .amount-box[data-amount="49000"] { background: #795548; }
+    .header-actions{display:flex;gap:12px;align-items:center}
+    .header-actions .user{
+      background:rgba(255,255,255,0.06);padding:8px 12px;border-radius:999px;color:#fff;font-weight:600;
+      display:flex;gap:10px;align-items:center;font-size:0.95rem;
+    }
 
-        /* Bonus animation */
-        .amount-box.bonus {
-            animation: pulse 2s infinite;
-        }
-        .amount-box.bonus::after {
-            content: "🎁 Bonus!";
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            background: #fff;
-            color: #000;
-            font-size: 12px;
-            font-weight: bold;
-            padding: 4px 6px;
-            border-radius: 6px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-        }
+    /* Layout container */
+    .wrap{
+      max-width:var(--max-width);
+      margin:20px auto;
+      padding:18px;
+    }
 
-        /* Tooltip styling */
-        .amount-box[data-tooltip]:hover::before {
-            content: attr(data-tooltip);
-            position: absolute;
-            bottom: 110%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.8);
-            color: #fff;
-            padding: 6px 10px;
-            border-radius: 6px;
-            font-size: 12px;
-            white-space: nowrap;
-            z-index: 10;
-        }
+    /* Top cards row */
+    .top-row{
+      display:grid;
+      grid-template-columns: 1fr 360px;
+      gap:18px;
+      align-items:start;
+    }
+    @media (max-width:980px){
+      .top-row{grid-template-columns:1fr; }
+    }
 
-        @keyframes pulse {
-            0% { transform: scale(1); box-shadow: 0 0 10px rgba(255,255,255,0.6); }
-            50% { transform: scale(1.1); box-shadow: 0 0 20px rgba(255,255,255,0.9); }
-            100% { transform: scale(1); box-shadow: 0 0 10px rgba(255,255,255,0.6); }
-        }
+    .wallet-card{
+      background:linear-gradient(180deg,#ffffff,#f7fafc);
+      border-radius:var(--radius);
+      padding:18px;
+      box-shadow:var(--shadow);
+      display:flex;
+      gap:18px;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .wallet-left{display:flex;gap:14px;align-items:center}
+    .wallet-badge{
+      width:72px;height:72px;border-radius:12px;background:linear-gradient(135deg,var(--accent-1),#06b6d4);
+      color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;
+      box-shadow:var(--glass-shadow);
+    }
+    .wallet-meta h3{margin:0;font-size:1.05rem}
+    .wallet-meta p{margin:4px 0 0;color:var(--muted);font-size:0.9rem}
 
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 6px; font-weight: bold; }
-        input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+    .wallet-stats{display:flex;gap:12px;align-items:center}
+    .stat{
+      background:linear-gradient(180deg,#0f1724,#071428);
+      color:#fff;padding:10px 14px;border-radius:10px;text-align:center;min-width:110px;
+      box-shadow:0 6px 18px rgba(2,6,23,0.18);
+    }
+    .stat small{display:block;color:rgba(255,255,255,0.8);font-size:0.8rem}
+    .stat strong{display:block;font-size:1.05rem;margin-top:6px}
 
-        .btn { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; transition: 0.3s; }
-        .btn-confirm { background-color: #0f9d58; color: #fff; }
-        .btn-confirm:hover { background-color: #0c7a43; }
-        .btn-back { background-color: #2196f3; color: #fff; margin-top: 10px; }
-        .btn-back:hover { background-color: #1769aa; }
+    /* Recharge panel */
+    .panel{
+      background: #fff;border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);
+    }
 
-        .success-message { display: none; color: #0f9d58; font-weight: bold; margin-top: 10px; }
-        .tick { display: none; font-size: 20px; color: #0f9d58; }
+    .panel h2{margin:0 0 12px 0;font-size:1.05rem}
+    .amount-grid{
+      display:grid;
+      grid-template-columns: repeat(3,1fr);
+      gap:12px;
+      margin-bottom:14px;
+    }
+    @media (max-width:900px){
+      .amount-grid{grid-template-columns: repeat(2,1fr);}
+    }
+    @media (max-width:520px){
+      .amount-grid{grid-template-columns: repeat(2,1fr);}
+    }
 
-        table { border-collapse: collapse; width: 95%; margin: 20px auto; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-        th { background-color: #f2f2f2; }
-        img { max-width: 120px; border: 1px solid #ccc; border-radius: 4px; }
+    .amount-box{
+      background:linear-gradient(180deg,#0f1724,#071428);
+      color:#fff;padding:14px;border-radius:10px;text-align:center;font-weight:700;
+      cursor:pointer;transition:transform .18s ease, box-shadow .18s ease;
+      display:flex;flex-direction:column;gap:6px;align-items:center;justify-content:center;
+      min-height:84px;box-shadow:0 8px 24px rgba(2,6,23,0.18);
+    }
+    .amount-box:hover{transform:translateY(-6px);box-shadow:0 18px 40px rgba(2,6,23,0.28)}
+    .amount-box small{font-weight:600;color:rgba(255,255,255,0.85);font-size:0.95rem}
+    .amount-box .bonus-tag{
+      background:linear-gradient(90deg,#ffb86b,#ff6bcb);padding:6px 8px;border-radius:999px;font-size:0.78rem;
+      color:#fff;font-weight:700;box-shadow:0 6px 18px rgba(255,107,203,0.12);
+    }
 
-        .status-badge { font-weight: bold; padding: 4px 8px; border-radius: 4px; }
-        .status-confirmed { color: #fff; background-color: #0f9d58; }
-        .status-rejected { color: #fff; background-color: #ff5722; }
-        .status-pending { color: #000; background-color: #ccc; }
+    /* Bonus animation */
+    .amount-box.bonus{
+      animation: heartbeat 1.6s infinite;
+      border:2px solid rgba(255,215,0,0.12);
+    }
+    @keyframes heartbeat{
+      0%{transform:scale(1)}
+      30%{transform:scale(1.04)}
+      50%{transform:scale(0.98)}
+      70%{transform:scale(1.06)}
+      100%{transform:scale(1)}
+    }
 
-        .alert { padding: 10px; border-radius: 4px; margin: 15px auto; width: 90%; }
-        .alert-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .alert-danger { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .alert-warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+    /* Form */
+    form .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+    @media (max-width:700px){ form .form-row{grid-template-columns:1fr} }
 
-        .payment-info {
-            background: #fff8e1;
-            border: 1px solid #ffecb3;
-            padding: 12px;
-            border-radius: 6px;
-            margin: 10px 0;
-            display: none;
-            font-weight: bold;
-            color: #333;
-        }
-    </style>
+    label{display:block;font-size:0.9rem;margin-bottom:6px;color:#0b1220}
+    input[type="number"], input[type="text"], select, input[type="file"]{
+      width:100%;padding:10px;border-radius:8px;border:1px solid #e6eef6;background:#fff;font-size:0.95rem;
+      box-sizing:border-box;
+    }
+    .btn{
+      display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;border:none;cursor:pointer;
+      font-weight:700;font-size:0.95rem;
+    }
+    .btn-primary{background:linear-gradient(90deg,var(--accent-1),#06b6d4);color:#fff;box-shadow:0 10px 30px rgba(6,182,212,0.12)}
+    .btn-ghost{background:transparent;border:1px solid #e6eef6;color:var(--text)}
+
+    .form-footer{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:8px}
+
+    .note{font-size:0.9rem;color:var(--muted);margin-top:8px}
+
+    /* Success message */
+    .success-message{
+      display:none;margin-top:12px;padding:10px;border-radius:8px;background:linear-gradient(90deg,#ecfdf5,#f0fdf4);
+      color:var(--success);font-weight:700;text-align:center;
+    }
+
+    /* Confetti container */
+    .confetti{position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:9999;overflow:hidden}
+
+    /* History / table */
+    .history{
+      margin-top:20px;
+    }
+    .history h3{margin:0 0 10px 0}
+    .table{
+      width:100%;border-collapse:collapse;border-radius:10px;overflow:hidden;box-shadow:var(--shadow);
+      background:#fff;
+    }
+    .table thead th{
+      text-align:left;padding:12px 14px;background:#0b1220;color:#fff;font-weight:700;font-size:0.95rem;
+    }
+    .table tbody td{padding:12px 14px;border-top:1px solid #f1f5f9;font-size:0.95rem;color:#0b1220}
+    .row-flex{display:flex;gap:8px;align-items:center}
+    .status{
+      padding:6px 10px;border-radius:999px;font-weight:700;font-size:0.85rem;
+    }
+    .status.confirmed{background:linear-gradient(90deg,#ecfdf5,#bbf7d0);color:var(--success)}
+    .status.pending{background:linear-gradient(90deg,#fff7ed,#ffedd5);color:var(--warning)}
+    .status.rejected{background:linear-gradient(90deg,#fff1f2,#fee2e2);color:var(--danger)}
+
+    .bonus-badge{background:linear-gradient(90deg,#ffefc7,#ffd6e8);padding:6px 8px;border-radius:8px;font-weight:700;color:#7c2d6b;font-size:0.85rem}
+
+    /* Responsive tweaks for table on small screens */
+    @media (max-width:720px){
+      .table thead{display:none}
+      .table tbody td{display:block;padding:12px;border-top:1px solid #f1f5f9}
+      .table tbody tr{margin-bottom:12px;background:#fff;border-radius:10px;box-shadow:var(--shadow);overflow:hidden}
+    }
+
+    /* Tiny helper */
+    .muted{color:var(--muted);font-size:0.9rem}
+  </style>
 </head>
 <body>
-    <div class="balance-card">
-    <h3>Your Wallet Overview</h3>
-    <p><strong>Available Balance:</strong> {{ user.wallet_balance }} KSh</p>
-    <p><strong>Today's Recharge:</strong> {{ todays_recharge }} KSh</p>
-    <p><strong>Total Confirmed Recharge:</strong> {{ total_recharge }} KSh</p>
+  <header>
+    <div class="brand">
+      <div class="logo">ME</div>
+      <div>
+        <h1>MetaEarn Recharge</h1>
+        <p>Secure top-ups • Instant confirmations • Bonus offers</p>
+      </div>
+    </div>
 
-</div>
+    <div class="header-actions">
+      <div class="muted" style="font-size:0.95rem">Welcome, <strong>PABLO</strong></div>
+      <div class="user">Balance: <strong style="margin-left:8px">{{ user.wallet_balance }} KSh</strong></div>
+    </div>
+  </header>
 
-    <h2>Recharge</h2>
+  <main class="wrap">
+    <div class="top-row">
+      <!-- Left: Recharge panel -->
+      <section class="panel" aria-labelledby="recharge-title">
+        <h2 id="recharge-title">Choose an amount to recharge</h2>
 
-    <!-- Flash messages block -->
-    {% with messages = get_flashed_messages(category_filter=["recharge"]) %}
-      {% if messages %}
-        {% for message in messages %}
-          <div class="alert alert-info">{{ message }}</div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
+        <!-- Amount grid -->
+        <div class="amount-grid" role="list" aria-label="Predefined recharge amounts">
+          <!-- Use data-amount and optional data-bonus attributes -->
+          <div class="amount-box" role="listitem" tabindex="0" data-amount="250">
+            <small>Quick Top-up</small>
+            <div>250</div>
+          </div>
 
-    <form action="{{ url_for('recharge') }}" method="post" enctype="multipart/form-data">
-        <div class="amount-boxes">
-            <div class="amount-box" data-amount="250">250</div>
-            <div class="amount-box" data-amount="500">500</div>
-            <div class="amount-box bonus" data-amount="900" data-tooltip="Recharge 900, get +150 free!">900 (+150)</div>
-            <div class="amount-box" data-amount="2200">2200</div>
-            <div class="amount-box" data-amount="3500">3500</div>
-            <div class="amount-box bonus" data-amount="5500" data-tooltip="Recharge 5500, get +400 free!">5500 (+400)</div>
-            <div class="amount-box" data-amount="12000">12000</div>
-            <div class="amount-box bonus" data-amount="21000" data-tooltip="Recharge 21000, get +900 free!">21000 (+900)</div>
-            <div class="amount-box bonus" data-amount="35000" data-tooltip="Recharge 35000, get +2500 free!">35000 (+2500)</div>
-            <div class="amount-box bonus" data-amount="49000" data-tooltip="Recharge 49000, get +6250 free!">49000 (+6250)</div>
+          <div class="amount-box" role="listitem" tabindex="0" data-amount="500">
+            <small>Popular</small>
+            <div>500</div>
+          </div>
+
+          <div class="amount-box bonus" role="listitem" tabindex="0" data-amount="900" data-bonus="+150 Bonus">
+            <small>Best Value</small>
+            <div>900</div>
+            <div class="bonus-tag">+150 Bonus</div>
+          </div>
+
+          <div class="amount-box" role="listitem" tabindex="0" data-amount="2200">
+            <small>Bundle</small>
+            <div>2200</div>
+          </div>
+
+          <div class="amount-box" role="listitem" tabindex="0" data-amount="3500">
+            <small>Bundle</small>
+            <div>3500</div>
+          </div>
+
+          <div class="amount-box bonus" role="listitem" tabindex="0" data-amount="5500" data-bonus="+400 Bonus">
+            <small>Hot</small>
+            <div>5500</div>
+            <div class="bonus-tag">+400 Bonus</div>
+          </div>
+
+          <div class="amount-box" role="listitem" tabindex="0" data-amount="12000">
+            <small>Large</small>
+            <div>12000</div>
+          </div>
+
+          <div class="amount-box bonus" role="listitem" tabindex="0" data-amount="21000" data-bonus="+900 Bonus">
+            <small>Super</small>
+            <div>21000</div>
+            <div class="bonus-tag">+900 Bonus</div>
+          </div>
+
+          <div class="amount-box bonus" role="listitem" tabindex="0" data-amount="35000" data-bonus="+2500 Bonus">
+            <small>Mega</small>
+            <div>35000</div>
+            <div class="bonus-tag">+2500 Bonus</div>
+          </div>
+
+          <div class="amount-box bonus" role="listitem" tabindex="0" data-amount="49000" data-bonus="+6250 Bonus">
+            <small>Ultimate</small>
+            <div>49000</div>
+            <div class="bonus-tag">+6250 Bonus</div>
+          </div>
         </div>
 
-        <div class="form-group">
-            <label>Enter other amount</label>
-            <input type="number" name="amount" id="amountInput" required>
-        </div>
+        <!-- Recharge form -->
+        <form id="rechargeForm" action="{{ url_for('recharge') }}" method="post" enctype="multipart/form-data" novalidate>
+          <div class="form-row">
+            <div>
+              <label for="amountInput">Enter amount</label>
+              <input id="amountInput" name="amount" type="number" min="1" placeholder="e.g., 500" required />
+            </div>
 
-        <div class="form-group">
-            <label>Payment Method</label>
-            <select name="provider" id="providerSelect" required>
+            <div>
+              <label for="providerSelect">Payment Method</label>
+              <select id="providerSelect" name="provider" required>
                 <option value="">-- Select Method --</option>
                 <option value="MPESA">MPESA</option>
                 <option value="Airtel">Airtel Money</option>
                 <option value="Equitel">Equitel</option>
                 <option value="Bank">Bank Transfer</option>
-            </select>
+              </select>
+            </div>
+          </div>
+
+          <div id="paymentInfo" class="form-row" aria-live="polite"></div>
+
+          <div class="form-row">
+            <div>
+              <label for="screenshot">Upload Screenshot</label>
+              <input id="screenshot" name="screenshot" type="file" accept="image/*" required />
+            </div>
+            <div>
+              <label for="transactionId">Transaction ID</label>
+              <input id="transactionId" name="transaction_id" type="text" placeholder="Enter transaction ID" required />
+            </div>
+          </div>
+
+          <div class="form-footer">
+            <button type="submit" class="btn btn-primary">Submit Recharge</button>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-ghost" style="text-decoration:none">✖ Back to Dashboard</a>
+            <div class="note">We verify payments within a few minutes. Confirmed recharges update your wallet automatically.</div>
+          </div>
+
+          <div class="success-message" id="successMessage">Request Sent Successfully 🎉</div>
+        </form>
+      </section>
+
+      <!-- Right: Quick stats -->
+      <aside>
+        <div class="wallet-card" role="region" aria-label="Wallet overview">
+          <div class="wallet-left">
+            <div class="wallet-badge">KSh</div>
+            <div class="wallet-meta">
+              <h3>Wallet Overview</h3>
+              <p class="muted">Quick snapshot of your account</p>
+            </div>
+          </div>
+
+          <div class="wallet-stats">
+            <div class="stat">
+              <small>Available</small>
+              <strong>{{ user.wallet_balance }} KSh</strong>
+            </div>
+            <div class="stat">
+              <small>Today's</small>
+              <strong>{{ todays_recharge }} KSh</strong>
+            </div>
+            <div class="stat">
+              <small>Confirmed</small>
+              <strong>{{ total_recharge }} KSh</strong>
+            </div>
+          </div>
         </div>
 
-        <!-- Dynamic payment instructions -->
-        <div id="paymentInfo" class="payment-info"></div>
+        <div style="height:12px"></div>
 
-        <div class="form-group">
-            <label>Upload Screenshot</label>
-            <input type="file" name="screenshot" accept="image/*" required>
+        <div class="panel" aria-labelledby="offers-title">
+          <h2 id="offers-title">Active Offers</h2>
+          <p class="muted" style="margin:0 0 8px 0">Tap a bonus box to auto-fill amount and see the bonus details.</p>
+          <ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px">
+            <li style="background:#fff;padding:10px;border-radius:10px;box-shadow:var(--shadow);display:flex;justify-content:space-between;align-items:center">
+              <div><strong>900</strong><div class="muted" style="font-size:0.85rem">+150 Bonus</div></div>
+              <div class="muted">Valid today</div>
+            </li>
+            <li style="background:#fff;padding:10px;border-radius:10px;box-shadow:var(--shadow);display:flex;justify-content:space-between;align-items:center">
+              <div><strong>5500</strong><div class="muted" style="font-size:0.85rem">+400 Bonus</div></div>
+              <div class="muted">Limited</div>
+            </li>
+            <li style="background:#fff;padding:10px;border-radius:10px;box-shadow:var(--shadow);display:flex;justify-content:space-between;align-items:center">
+              <div><strong>21000</strong><div class="muted" style="font-size:0.85rem">+900 Bonus</div></div>
+              <div class="muted">Hot</div>
+            </li>
+          </ul>
         </div>
+      </aside>
+    </div>
 
-        <div class="form-group">
-            <label>Transaction ID</label>
-            <input type="text" name="transaction_id" required>
-        </div>
+    <!-- History -->
+    <section class="history" aria-labelledby="history-title">
+      <h3 id="history-title">Your Recharge Requests</h3>
 
-        <button type="submit" class="btn btn-confirm">Submit Recharge</button>
-        <a href="{{ url_for('dashboard') }}" class="btn btn-back">✖ Back to Dashboard</a>
-        <div class="success-message">Request Sent Successfully <span class="tick">✔</span></div>
-    </form>
-
-    <h2>Your Recharge Requests</h2>
-    <table>
-        <tr>
-            <th>ID</th>
+      <table class="table" role="table" aria-label="Recharge history">
+        <thead>
+          <tr>
             <th>Amount</th>
             <th>Provider</th>
-            <th>Transaction ID</th>
+            <th>Transaction</th>
             <th>Status</th>
-            <th>Created At</th>
-        </tr>
-        {% for r in recharges %}
-        <tr>
-            <td>{{ r.id }}</td>
-            <td>{{ r.amount }}</td>
-            <td>{{ r.provider }}</td>
-            <td>{{ r.transaction_id }}</td>
-            <td>
-                {% if r.status == "confirmed" %}
-                    <span class="status-badge status-confirmed">Confirmed</span>
-                {% elif r.status == "rejected" %}
-                    <span class="status-badge status-rejected">Rejected</span>
-                {% else %}
-                    <span class="status-badge status-pending">Pending</span>
-                {% endif %}
-            </td>
-            <td>{{ r.created_at }}</td>
-        </tr>
-        {% endfor %}
-    </table>
+            <th>Date</th>
+          </tr>
+        </thead>
 
-    <script>
-        // Make amount boxes clickable
-        document.querySelectorAll('.amount-box').forEach(box => {
-            box.addEventListener('click', () => {
-                document.getElementById('amountInput').value = box.dataset.amount;
-            });
+        <tbody>
+          {% if recharges|length == 0 %}
+            <tr><td colspan="5" style="text-align:center;padding:18px;color:var(--muted)">No recharge requests yet.</td></tr>
+          {% else %}
+            {% for r in recharges %}
+              <tr role="row">
+                <td>
+                  <div class="row-flex">
+                    <div><strong>{{ r.amount }} KSh</strong></div>
+                    {% if r.bonus %}
+                      <div class="bonus-badge" title="Bonus applied">{{ r.bonus }}</div>
+                    {% endif %}
+                  </div>
+                </td>
+                <td>{{ r.provider }}</td>
+                <td>{{ r.transaction_id }}</td>
+                <td>
+                  {% set s = r.status.lower() %}
+                  <span class="status {{ s }}">{{ r.status }}</span>
+                </td>
+                <td>{{ r.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+              </tr>
+            {% endfor %}
+          {% endif %}
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <!-- Confetti container -->
+  <div id="confetti" class="confetti" aria-hidden="true"></div>
+
+  <script>
+    (function(){
+      // Accessibility helpers
+      function announce(text){
+        // simple polite announcement for screen readers
+        const live = document.getElementById('aria-live');
+        if(live){ live.textContent = text; return; }
+        const el = document.createElement('div');
+        el.id = 'aria-live';
+        el.setAttribute('aria-live','polite');
+        el.style.position='absolute';el.style.left='-9999px';
+        el.style.top='auto';el.style.width='1px';el.style.height='1px';el.style.overflow='hidden';
+        document.body.appendChild(el);
+        el.textContent = text;
+      }
+
+      // Clickable amount boxes fill the amount input
+      const boxes = document.querySelectorAll('.amount-box');
+      const amountInput = document.getElementById('amountInput');
+      boxes.forEach(box => {
+        box.addEventListener('click', () => {
+          const amt = box.dataset.amount;
+          amountInput.value = amt;
+          // show bonus details in paymentInfo if present
+          const bonus = box.dataset.bonus;
+          const paymentInfo = document.getElementById('paymentInfo');
+          paymentInfo.innerHTML = '';
+          if(bonus){
+            const div = document.createElement('div');
+            div.style.gridColumn = '1 / -1';
+            div.style.background = 'linear-gradient(90deg,#fff7ed,#fff1f2)';
+            div.style.padding = '10px';
+            div.style.borderRadius = '8px';
+            div.style.fontWeight = '700';
+            div.style.color = '#7c2d6b';
+            div.textContent = 'Bonus applied: ' + bonus;
+            paymentInfo.appendChild(div);
+            announce('Bonus applied: ' + bonus);
+          } else {
+            // clear any previous
+            paymentInfo.innerHTML = '';
+          }
         });
 
-        // Show success message after submit (client-side only)
-        document.querySelector('form').addEventListener('submit', function() {
-            document.querySelector('.success-message').style.display = 'block';
-            document.querySelector('.tick').style.display = 'inline';
+        // keyboard support
+        box.addEventListener('keydown', (e) => {
+          if(e.key === 'Enter' || e.key === ' '){
+            e.preventDefault();
+            box.click();
+          }
         });
+      });
 
-        // Dynamic payment instructions
-        const providerSelect = document.getElementById('providerSelect');
+      // Provider-specific helper text
+      const providerSelect = document.getElementById('providerSelect');
+      providerSelect.addEventListener('change', () => {
+        const v = providerSelect.value;
         const paymentInfo = document.getElementById('paymentInfo');
+        paymentInfo.innerHTML = '';
+        if(!v) return;
+        const div = document.createElement('div');
+        div.style.gridColumn = '1 / -1';
+        div.style.background = '#f8fafc';
+        div.style.padding = '10px';
+        div.style.borderRadius = '8px';
+        div.style.fontSize = '0.95rem';
+        div.style.color = '#0b1220';
+        if(v === 'MPESA'){
+          div.innerHTML = '<strong>MPESA Instructions:</strong> Use Paybill 123456, Account: your phone number. Send the STK push or enter transaction ID.';
+        } else if(v === 'Airtel'){
+          div.innerHTML = '<strong>Airtel Money:</strong> Send to 07XXXXXXXX and upload screenshot. Enter transaction ID.';
+        } else if(v === 'Equitel'){
+          div.innerHTML = '<strong>Equitel:</strong> Use your Equitel number; upload proof of payment.';
+        } else {
+          div.innerHTML = '<strong>Bank Transfer:</strong> Use the bank details provided in your dashboard and upload the transfer slip.';
+        }
+        paymentInfo.appendChild(div);
+      });
 
-        providerSelect.addEventListener('change', function() {
-            const provider = this.value;
-            if (provider === "MPESA") {
-                paymentInfo.style.display = 'block';
-                paymentInfo.textContent = "MPESA: Buy Goods Till 6984245";
-            } else if (provider === "Airtel") {
-                paymentInfo.style.display = 'block';
-                paymentInfo.textContent = "Airtel Money: Send Cash to 0792572591";
-            } else {
-                paymentInfo.style.display = 'none';
-                paymentInfo.textContent = "";
-            }
-        });
-    </script>
+      // Confetti generator (lightweight)
+      function launchConfetti(){
+        const container = document.getElementById('confetti');
+        container.innerHTML = '';
+        const colors = ['#f44336','#ff9800','#4caf50','#2196f3','#9c27b0','#ffeb3b'];
+        const count = 60;
+        for(let i=0;i<count;i++){
+          const el = document.createElement('div');
+          el.style.position = 'absolute';
+          el.style.left = Math.random()*100 + 'vw';
+          el.style.top = (-10 - Math.random()*20) + 'vh';
+          el.style.width = (6 + Math.random()*10) + 'px';
+          el.style.height = (8 + Math.random()*10) + 'px';
+          el.style.background = colors[Math.floor(Math.random()*colors.length)];
+          el.style.opacity = 0.95;
+          el.style.borderRadius = (Math.random()>0.5? '2px':'50%');
+          el.style.transform = 'rotate(' + (Math.random()*360) + 'deg)';
+          el.style.transition = 'transform 3s linear, top 3s linear, left 3s linear, opacity 0.6s linear';
+          container.appendChild(el);
+          // animate
+          setTimeout(() => {
+            el.style.top = (100 + Math.random()*20) + 'vh';
+            el.style.left = (Math.random()*100) + 'vw';
+            el.style.transform = 'rotate(' + (Math.random()*720) + 'deg) translateY(20px)';
+            el.style.opacity = 0.9;
+          }, 20 + Math.random()*200);
+        }
+        // cleanup
+        setTimeout(()=>{ container.innerHTML = ''; }, 4200);
+      }
+
+      // Form submit: show success + confetti, but allow normal POST to proceed.
+      const form = document.getElementById('rechargeForm');
+      const successMessage = document.getElementById('successMessage');
+
+      form.addEventListener('submit', function(e){
+        // show immediate feedback while server processes
+        successMessage.style.display = 'block';
+        launchConfetti();
+        // keep message visible for a short time; do not prevent default submission
+        setTimeout(()=>{ successMessage.style.display = 'none'; }, 4200);
+      });
+
+      // Enhance history status colors (in case server returns lowercase/uppercase)
+      document.querySelectorAll('.status').forEach(s => {
+        const txt = s.textContent.trim().toLowerCase();
+        s.classList.remove('confirmed','pending','rejected');
+        if(txt === 'confirmed' || txt === 'success' || txt === 'completed') s.classList.add('confirmed');
+        else if(txt === 'pending' || txt === 'processing') s.classList.add('pending');
+        else s.classList.add('rejected');
+      });
+
+      // Keyboard accessibility: focus ring for amount boxes
+      document.addEventListener('keydown', (e) => {
+        if(e.key === 'Tab'){
+          document.querySelectorAll('.amount-box:focus').forEach(el => {
+            el.style.outline = '3px solid rgba(99,102,241,0.18)';
+          });
+        }
+      });
+
+    })();
+  </script>
 </body>
 </html>

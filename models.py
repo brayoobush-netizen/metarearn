@@ -63,6 +63,7 @@ class Withdrawal(db.Model):
     bank_name = db.Column(db.String(100), nullable=False)
     amount = db.Column(db.Float, nullable=False)
     status = db.Column(db.String(50), default="Pending")
+    note = db.Column(db.String(255), nullable=True)  # <-- added to match your view
     created_at = db.Column(db.DateTime, default=db.func.now())
 
     # Relationship back to User
@@ -79,7 +80,7 @@ class Recharge(db.Model):
     transaction_id = db.Column(db.String(100), nullable=False)
     screenshot_filename = db.Column(db.String(200))
     status = db.Column(db.String(20), default="pending")
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=db.func.now())
 
     # Relationship back to User
     user = db.relationship("User", back_populates="recharges")
@@ -97,6 +98,21 @@ class Purchase(db.Model):
     period_days = db.Column(db.Integer, nullable=False)
     start_date = db.Column(db.DateTime, default=datetime.utcnow)
     end_date = db.Column(db.DateTime)
+    earned = db.Column(db.Float, default=0.0)
+    status = db.Column(db.String(20), default="Active")
 
     # Relationship back to User
     user = db.relationship("User", back_populates="purchases")
+
+class Product(db.Model):
+    __tablename__ = "product"
+
+    id = db.Column(db.Integer, primary_key=True)
+    sku = db.Column(db.String(50), unique=True, nullable=False)
+    name = db.Column(db.String(120), nullable=False)
+    price = db.Column(db.Float, nullable=False)
+    income_per_day = db.Column(db.Float, nullable=False)
+    period_days = db.Column(db.Integer, nullable=False)
+    image = db.Column(db.String(120), nullable=False)
+    available = db.Column(db.Integer, default=1)  # 1 means available, 0 means sold out
+

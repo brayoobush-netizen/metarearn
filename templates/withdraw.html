@@ -13,11 +13,65 @@
   {% endif %}
 {% endwith %}
 
-<!-- Balance Card -->
-<div class="card text-white mb-4 shadow-lg" style="background:linear-gradient(135deg,#28a745,#20c997); border-radius:14px;">
-  <div class="card-body">
-    <h3 class="fw-bold">Wallet Balance: KSh {{ current_user.wallet_balance }}</h3>
-    <p class="mb-0">Total Withdrawals: {{ withdrawals|length }}</p>
+<!-- Top summary row -->
+<div class="row g-4 mb-4">
+  <div class="col-12 col-lg-8">
+    <div class="card shadow-sm" style="border-radius:14px; overflow:hidden;">
+      <div class="d-flex align-items-center p-4" style="background:linear-gradient(135deg,#0ea360,#20c997); color:#fff;">
+        <div class="me-3" style="width:72px;height:72px;border-radius:12px;background:rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem;">
+          KSh
+        </div>
+        <div>
+          <h4 class="mb-0 fw-bold">Wallet Balance</h4>
+          <div class="small opacity-75">Available balance in your MetaEarn wallet</div>
+        </div>
+        <div class="ms-auto text-end">
+          <div class="h4 mb-0 fw-bold">
+            {{ '{:,.2f}'.format((current_user.wallet_balance|default(0))|float) }}
+          </div>
+          <div class="small opacity-75">KSh</div>
+        </div>
+      </div>
+
+      <div class="p-4 bg-white">
+        <div class="row">
+          <div class="col-6 col-md-4 mb-3">
+            <div class="small text-muted">Today's Withdraw</div>
+            <div class="fw-bold">
+              {{ '{:,.2f}'.format((todays_withdraw|default(0))|float) }} KSh
+            </div>
+          </div>
+          <div class="col-6 col-md-4 mb-3">
+            <div class="small text-muted">Total Withdraw</div>
+            <div class="fw-bold">
+              {{ '{:,.2f}'.format((total_withdraw|default(0))|float) }} KSh
+            </div>
+          </div>
+          <div class="col-12 col-md-4 mb-3">
+            <div class="small text-muted">Total Withdrawals</div>
+            <div class="fw-bold">{{ (withdrawals|length) if withdrawals is defined else 0 }}</div>
+          </div>
+        </div>
+        <div class="mt-2">
+          <small class="text-muted">Tip: "Today's Withdraw" is calculated over the last 24 hours. Keep your transfer proof ready for faster verification.</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-4">
+    <div class="card shadow-sm" style="border-radius:14px;">
+      <div class="card-header bg-gradient text-white fw-bold" style="background:linear-gradient(135deg,#6f42c1,#d63384);">
+        Quick Actions
+      </div>
+      <div class="card-body">
+        <div class="d-grid gap-2">
+          <a href="{{ url_for('recharge') }}" class="btn btn-outline-primary btn-lg">Recharge Wallet</a>
+          <a href="{{ transactions_url or url_for('dashboard') }}" class="btn btn-outline-secondary btn-lg">View Transactions</a>
+        </div>
+        <div class="mt-3 small text-muted">Use the buttons above for fast navigation. For bank transfers, include the transfer slip when requesting withdrawal.</div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -25,16 +79,21 @@
 <div class="card mb-4 shadow-sm" style="border-radius:14px;">
   <div class="card-header bg-primary text-white fw-bold">Request Withdrawal</div>
   <div class="card-body">
-    <form method="POST" class="row g-3">
+    <form id="withdrawForm" method="POST" class="row g-3" novalidate>
+      {% if csrf_token is defined %}
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {% elif csrf_field is defined %}
+        {{ csrf_field() }}
+      {% endif %}
 
-      <div class="col-12">
+      <div class="col-12 col-md-6">
         <label class="form-label">Recipient First Name</label>
-        <input type="text" name="recipient_name" class="form-control" required>
+        <input type="text" name="recipient_name" class="form-control" required aria-required="true" placeholder="e.g., John">
       </div>
 
-      <div class="col-12">
+      <div class="col-12 col-md-6">
         <label class="form-label">Institution</label>
-        <select name="bank_name" class="form-select" required>
+        <select name="bank_name" class="form-select" required aria-required="true">
           <option value="">-- Select Institution --</option>
           <option value="M-Pesa">M-Pesa</option>
           <option value="Airtel Money">Airtel Money</option>
@@ -49,67 +108,198 @@
         </select>
       </div>
 
-      <div class="col-12">
-        <label class="form-label">Account Number</label>
-        <input type="text" name="account_number" class="form-control" required>
+      <div class="col-12 col-md-6">
+        <label class="form-label">Account / Phone Number</label>
+        <input type="text" name="account_number" class="form-control" required aria-required="true" placeholder="Account number or mobile number">
+      </div>
+
+      <div class="col-12 col-md-6">
+        <label class="form-label">Amount (KSh)</label>
+        <input type="number" step="0.01" name="amount" class="form-control" required aria-required="true" min="1" placeholder="e.g., 1500.00">
       </div>
 
       <div class="col-12">
-        <label class="form-label">Amount</label>
-        <input type="number" step="0.01" name="amount" class="form-control" required>
+        <label class="form-label">Optional Note</label>
+        <input type="text" name="note" class="form-control" placeholder="Reason or reference (optional)">
       </div>
 
-      <div class="col-12 d-flex justify-content-between">
-        <button type="submit" class="btn btn-success px-4 fw-bold">Submit Withdrawal</button>
-        <a href="{{ url_for('dashboard') }}" class="btn btn-danger px-4 fw-bold">✖ Back to Dashboard</a>
+      <div class="col-12 d-flex justify-content-between align-items-center">
+        <div>
+          <button id="submitBtn" type="submit" class="btn btn-success px-4 fw-bold">
+            <span id="btnSpinner" class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
+            Submit Withdrawal
+          </button>
+          <a href="{{ url_for('dashboard') }}" class="btn btn-danger px-4 fw-bold ms-2">✖ Back to Dashboard</a>
+        </div>
+        <div class="text-end">
+          <small class="text-muted">Available: <strong>
+            {{ '{:,.2f}'.format((current_user.wallet_balance|default(0))|float) }} KSh
+          </strong></small>
+        </div>
       </div>
     </form>
   </div>
 </div>
 
 <!-- Withdrawal History -->
-<div class="card shadow-sm" style="border-radius:14px;">
+<div class="card shadow-sm mb-5" style="border-radius:14px;">
   <div class="card-header bg-gradient text-white fw-bold" style="background:linear-gradient(135deg,#6f42c1,#d63384);">
     My Withdrawals
   </div>
   <div class="card-body p-0">
-    <div class="table-responsive" style="max-height:400px;">
-      <table class="table table-striped table-hover mb-0">
+    <div class="table-responsive" style="max-height:520px; overflow:auto;">
+      <table class="table table-hover mb-0 align-middle">
         <thead class="table-dark">
           <tr>
-            <th>ID</th>
-            <th>Amount</th>
-            <th>Institution</th>
-            <th>Recipient</th>
-            <th>Status</th>
-            <th>Created</th>
+            <th scope="col">ID</th>
+            <th scope="col">Amount</th>
+            <th scope="col">Institution</th>
+            <th scope="col">Recipient</th>
+            <th scope="col">Status</th>
+            <th scope="col">Requested</th>
           </tr>
         </thead>
         <tbody>
-          {% for w in withdrawals %}
-          <tr>
-            <td>{{ w.id }}</td>
-            <td>KSh {{ w.amount }}</td>
-            <td>{{ w.bank_name }}</td>
-            <td>{{ w.recipient_name }}</td>  <!-- fixed -->
-            <td>
-              {% if w.status == 'Paid' %}
-                <span class="badge bg-success">Paid</span>
-              {% elif w.status == 'Pending' %}
-                <span class="badge bg-warning text-dark">Pending</span>
-              {% elif w.status == 'Rejected' %}
-                <span class="badge bg-danger">Rejected</span>
-              {% else %}
-                <span class="badge bg-secondary">{{ w.status }}</span>
-              {% endif %}
-            </td>
-            <td>{{ w.created_at }}</td>
-          </tr>
-          {% endfor %}
+          {% if withdrawals is not defined or withdrawals|length == 0 %}
+            <tr>
+              <td colspan="6" class="text-center py-4 text-muted">You have no withdrawal requests yet.</td>
+            </tr>
+          {% else %}
+            {% for w in withdrawals %}
+              <tr>
+                <td class="fw-bold">#{{ w.id }}</td>
+                <td>KSh {{ '{:,.2f}'.format((w.amount|default(0))|float) }}</td>
+                <td>{{ w.bank_name }}</td>
+                <td>{{ w.recipient_name }}</td>
+                <td>
+                  {% set status = (w.status or '')|string %}
+                  {% if status == 'Paid' %}
+                    <span class="badge bg-success">Paid</span>
+                  {% elif status == 'Pending' %}
+                    <span class="badge bg-warning text-dark">Pending</span>
+                  {% elif status == 'Rejected' %}
+                    <span class="badge bg-danger">Rejected</span>
+                  {% else %}
+                    <span class="badge bg-secondary">{{ w.status }}</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if w.created_at is string %}
+                    {{ w.created_at }}
+                  {% elif w.created_at %}
+                    {{ w.created_at.strftime('%Y-%m-%d %H:%M') }}
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          {% endif %}
         </tbody>
       </table>
     </div>
   </div>
 </div>
+
+<!-- Confirmation Modal (Bootstrap) -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:12px;">
+      <div class="modal-header">
+        <h5 class="modal-title" id="confirmModalLabel">Confirm Withdrawal</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-1">Please confirm you want to withdraw <strong id="confirmAmount">KSh 0.00</strong> to <strong id="confirmRecipient">Recipient</strong> via <strong id="confirmInstitution">Institution</strong>.</p>
+        <p class="small text-muted mb-0">Make sure the account/phone number is correct. Incorrect details may delay processing.</p>
+      </div>
+      <div class="modal-footer">
+        <button id="modalCancel" type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button id="modalConfirm" type="button" class="btn btn-success">Confirm & Submit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Inline script: client-side validation + UX -->
+<script>
+  (function () {
+    const form = document.getElementById('withdrawForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const btnSpinner = document.getElementById('btnSpinner');
+
+    // Bootstrap modal (assumes bootstrap JS is loaded in base.html)
+    const confirmModalEl = document.getElementById('confirmModal');
+    let confirmModal = null;
+    if (typeof bootstrap !== 'undefined') {
+      confirmModal = new bootstrap.Modal(confirmModalEl, { keyboard: true });
+    }
+
+    // Populate modal with values
+    function populateModal() {
+      const amount = form.querySelector('input[name="amount"]').value || '0.00';
+      const recipient = form.querySelector('input[name="recipient_name"]').value || 'Recipient';
+      const institution = form.querySelector('select[name="bank_name"]').value || 'Institution';
+      document.getElementById('confirmAmount').textContent = 'KSh ' + parseFloat(amount || 0).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+      document.getElementById('confirmRecipient').textContent = recipient;
+      document.getElementById('confirmInstitution').textContent = institution;
+    }
+
+    // Prevent double submit and show spinner
+    function startSubmitting() {
+      submitBtn.setAttribute('disabled', 'disabled');
+      btnSpinner.classList.remove('d-none');
+    }
+    function stopSubmitting() {
+      submitBtn.removeAttribute('disabled');
+      btnSpinner.classList.add('d-none');
+    }
+
+    // Intercept submit to show confirmation modal
+    form.addEventListener('submit', function (e) {
+      // Basic HTML5 validation
+      if (!form.checkValidity()) {
+        // Let browser show validation UI
+        return;
+      }
+      e.preventDefault();
+      populateModal();
+      if (confirmModal) {
+        confirmModal.show();
+      } else {
+        // Fallback: if bootstrap not available, ask native confirm
+        if (confirm('Confirm withdrawal?')) {
+          startSubmitting();
+          form.submit();
+        }
+      }
+    });
+
+    // Modal confirm button: actually submit
+    const modalConfirm = document.getElementById('modalConfirm');
+    if (modalConfirm) {
+      modalConfirm.addEventListener('click', function () {
+        startSubmitting();
+        if (confirmModal) confirmModal.hide();
+        setTimeout(() => form.submit(), 250);
+      });
+    }
+
+    // If modal cancelled, ensure spinner hidden
+    const modalCancel = document.getElementById('modalCancel');
+    if (modalCancel) {
+      modalCancel.addEventListener('click', function () {
+        stopSubmitting();
+      });
+    }
+
+    // Accessibility: focus first invalid input on submit attempt
+    form.addEventListener('invalid', function (e) {
+      e.preventDefault();
+      e.target.focus();
+    }, true);
+
+  })();
+</script>
 
 {% endblock %}

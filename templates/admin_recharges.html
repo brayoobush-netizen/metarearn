@@ -15,6 +15,24 @@
         .status-confirmed { color: #fff; background-color: #0f9d58; }
         .status-rejected { color: #fff; background-color: #ff5722; }
         .status-pending { color: #000; background-color: #ccc; }
+
+        /* Bonus badge glow + heartbeat */
+        .bonus-badge {
+            background: #ffeb3b;
+            color: #000;
+            font-weight: bold;
+            padding: 4px 8px;
+            border-radius: 6px;
+            animation: heartbeat 1.5s infinite;
+            box-shadow: 0 0 12px rgba(255, 235, 59, 0.8);
+        }
+        @keyframes heartbeat {
+            0%   { transform: scale(1); }
+            25%  { transform: scale(1.05); }
+            40%  { transform: scale(0.95); }
+            60%  { transform: scale(1.08); }
+            100% { transform: scale(1); }
+        }
     </style>
 </head>
 <body>
@@ -24,6 +42,7 @@
             <th>ID</th>
             <th>User</th>
             <th>Amount</th>
+            <th>Bonus</th>
             <th>Provider</th>
             <th>Transaction ID</th>
             <th>Status</th>
@@ -31,11 +50,19 @@
             <th>Created At</th>
             <th>Action</th>
         </tr>
+        {% set bonus_map = {900:150, 5500:400, 21000:900, 35000:2500, 49000:6250} %}
         {% for r in recharges %}
         <tr>
             <td>{{ r.id }}</td>
             <td>{{ r.user.email }}</td>
             <td>{{ r.amount }}</td>
+            <td>
+                {% if r.amount in bonus_map %}
+                    <span class="bonus-badge">+{{ bonus_map[r.amount] }}</span>
+                {% else %}
+                    -
+                {% endif %}
+            </td>
             <td>{{ r.provider }}</td>
             <td>{{ r.transaction_id }}</td>
             <td>
@@ -57,16 +84,14 @@
             <td>{{ r.created_at }}</td>
             <td>
                 <div class="actions">
-                    <form action="{{ url_for('confirm_recharge', recharge_id=r.id) }}" method="post">
-                        {# Uncomment if using Flask-WTF CSRF protection #}
-                        {# {{ csrf_token() }} #}
-                        <button type="submit" class="btn btn-confirm">Confirm</button>
-                    </form>
-                    <form action="{{ url_for('reject_recharge', recharge_id=r.id) }}" method="post">
-                        {# Uncomment if using Flask-WTF CSRF protection #}
-                        {# {{ csrf_token() }} #}
-                        <button type="submit" class="btn btn-reject">Reject</button>
-                    </form>
+                    {% if r.status == "pending" %}
+                        <form action="{{ url_for('confirm_recharge', recharge_id=r.id) }}" method="post">
+                            <button type="submit" class="btn btn-confirm">Confirm</button>
+                        </form>
+                        <form action="{{ url_for('reject_recharge', recharge_id=r.id) }}" method="post">
+                            <button type="submit" class="btn btn-reject">Reject</button>
+                        </form>
+                    {% endif %}
                 </div>
             </td>
         </tr>

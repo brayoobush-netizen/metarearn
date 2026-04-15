@@ -166,56 +166,101 @@
       <button type="button" class="green-action" id="btnSummaryDetails"><i class="bi bi-info-circle-fill"></i> Details</button>
     </div>
 
-    <!-- Products -->
-    <div class="products">
-      {% for p in products %}
-      <div class="product-card" data-id="{{ p.sku }}" data-price="{{ p.price|replace('KSh','') }}">
-        <img src="/static/images/{{ p.sku|lower }}.png" alt="{{ p.name }}">
-        <div class="product-details">
-          <h5>{{ p.name }}</h5>
-          <p>Price: {{ p.price }}</p>
-          <p>Quantity: <span class="quantity">0/1</span></p>
-          <button class="btn btn-buy w-100 buy-btn">Buy</button>
+    <!-- Products Section -->
+<h3 style="margin-top:20px;color:var(--accent);">Available Products</h3>
+<div class="products">
+  {% for p in products %}
+  <div class="product-card" data-id="{{ p.sku }}" data-price="{{ p.price|replace('KSh','') }}">
+    <img src="{{ url_for('static', filename='images/' ~ p.image) }}" alt="{{ p.name }}">
+    <div class="product-details">
+      <h5>{{ p.name }}</h5>
+      <p>Price: {{ p.price }}</p>
+      <p>Quantity: <span class="quantity">{{ p.available }}/1</span></p>
+
+{% if p.is_owned %}
+  <button class="btn btn-secondary w-100" disabled>Already Purchased</button>
+{% elif p.available > 0 %}
+  <button class="btn btn-buy w-100 buy-btn">Buy</button>
+{% else %}
+  <button class="btn btn-secondary w-100" disabled>Sold Out</button>
+{% endif %}
+
+    </div>
+  </div>
+{% endfor %}
+
+      
+</div>
+
+<!-- Active Products Section -->
+<h3 style="margin-top:30px;color:var(--accent-2);">Active Products</h3>
+<section class="products">
+  {% if active_purchases %}
+    {% for p in active_purchases %}
+    <article class="product-card active-card" role="button" tabindex="0"
+         data-bs-toggle="modal" data-bs-target="#activeProductModal"
+         data-name="{{ p.product_name }}"
+         data-income="{{ p.income_per_day }}"
+         data-days="{{ p.period_days }}"
+         data-earned="{{ p.calculated_earned }}"
+         data-total="{{ p.total_return }}">
+  <img src="{{ url_for('static', filename='images/' ~ p.image) }}" alt="{{ p.product_name }}">
+  <div class="product-details">
+    <h5>{{ p.product_name }}</h5>
+    <p>Days remaining: {{ p.days_remaining }}</p>
+    <p>Status: {{ p.status }}</p>
+  </div>
+</article>
+
+    {% endfor %}    
+  {% else %}
+    <div class="empty-card">
+      <h3 style="color:#fff;">No active products</h3>
+      <p>You don’t currently have any active investments. Buy a package to start earning daily income.</p>
+    </div>
+  {% endif %}
+</section>
+
+<!-- Purchased Packages Section -->
+<h3 style="margin-top:30px;color:var(--glow);">My Purchased Packages</h3>
+<section class="products">
+  {% if purchases %}
+    {% for p in purchases %}
+    <article class="product-card" role="article" aria-labelledby="prod-{{ loop.index }}">
+      <!-- Product image -->
+      <img src="{{ url_for('static', filename='images/' ~ p.image) }}" 
+           alt="{{ p.product_name }}"
+           style="width:25%; height:auto; border-radius:8px; object-fit:cover; margin-right:15px;">
+      
+      <!-- Product details -->
+      <div class="product-details" style="flex:1;">
+        <h5 id="prod-{{ loop.index }}">{{ p.product_name }}</h5>
+        <p>Price: <strong style="color:var(--accent)">KSh{{ p.price }}</strong></p>
+        <p>Income per day: KSh{{ p.income_per_day }}</p>
+        <p>Period: {{ p.period_days }} days</p>
+        <p>Days remaining: {{ p.days_remaining }}</p>
+        <p>Total return: KSh{{ p.total_return }}</p>
+        <p>Earned so far: KSh{{ p.calculated_earned }}</p>
+        
+        <!-- Status pill -->
+        <div class="product-meta">
+          <div class="meta-pill">Status: {{ p.status }}</div>
         </div>
       </div>
-      {% endfor %}
-    </div
+    </article>
+    {% endfor %}
+  {% else %}
+    <div class="empty-card">
+      <h3 style="color:#fff;">No purchases yet</h3>
+      <p>You haven't bought any packages. Visit <strong>Products</strong> to explore available packages and start investing.</p>
+    </div>
+  {% endif %}
+</section>
 
-    <!-- Purchases Section -->
-    {% if purchases %}
-      <h3 style="margin-top:30px;color:var(--glow);">My Purchased Packages</h3>
-      <section class="products">
-        {% for p in purchases %}
-        <article class="product-card" role="article" aria-labelledby="prod-{{ loop.index }}">
-          <img src="{{ url_for('static', filename=p.image or 'images/metearn1.png') }}" alt="{{ p.name }}">
-          <div class="product-details" style="flex:1;">
-            <h5 id="prod-{{ loop.index }}">{{ p.name }}</h5>
-            <p>Price: <strong style="color:var(--accent)">{{ p.price }}</strong></p>
-            <p>Income: {{ p.income or '—' }}</p>
-            <p>Period: {{ p.period or '—' }}</p>
-            <p>Purchased: <small style="color:var(--muted)">{{ p.purchased_date or '—' }}</small></p>
 
-            <div class="product-meta">
-              <div class="meta-pill">Upline: {{ p.upline or '—' }}</div>
-              <div class="meta-pill">Status: {{ p.status or 'Active' }}</div>
-              <div class="meta-pill">Earned: KSh{{ p.earned | default('0.00') }}</div>
-            </div>
 
-            <div class="product-actions">
-              <button type="button" class="btn btn-buy btn-sm w-50" data-action="reinvest" data-product-id="{{ p.id }}" data-product-name="{{ p.name }}">Reinvest</button>
-              <button type="button" class="btn btn-details btn-sm w-50" data-action="product-details" data-product-id="{{ p.id }}" data-product-name="{{ p.name }}">Details</button>
-            </div>
-          </div>
-        </article>
-        {% endfor %}
-      </section>
-    {% else %}
-      <div class="empty-card" role="status" aria-live="polite">
-        <h3 style="margin-top:0;color:#fff;">No purchases yet</h3>
-        <p style="margin:8px 0 12px 0;">You haven't bought any packages. Visit <strong>Products</strong> to explore available packages and start investing.</p>
-        <button type="button" class="btn btn-outline-light" id="btnBrowseProducts">Browse Packages</button>
-      </div>
-    {% endif %}
+
+
 
   </main>
 
@@ -264,11 +309,63 @@
     </div>
   </div>
 
+<!-- Active Product Modal -->
+<div class="modal fade" id="activeProductModal" tabindex="-1" aria-labelledby="activeProductLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content text-dark">
+      <div class="modal-header">
+        <h5 class="modal-title" id="activeProductLabel">Active Product Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p><strong>Name:</strong> <span id="modalName"></span></p>
+        <p><strong>Income per day:</strong> KSh<span id="modalIncome"></span></p>
+        <p><strong>Period:</strong> <span id="modalDays"></span> days</p>
+        <p><strong>Earned so far:</strong> KSh<span id="modalEarned"></span></p>
+        <p><strong>Total return:</strong> KSh<span id="modalTotal"></span></p>
+
+        <!-- Progress bar -->
+        <div class="progress" style="height:20px;">
+          <div id="progressBar" class="progress-bar bg-success" role="progressbar"
+               style="width:0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+            0%
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
   <!-- Your existing JS logic (flash messages, buy button, modals) -->
   <script>
+    // Active product modal logic
+    document.querySelectorAll(".active-card").forEach(card => {
+      card.addEventListener("click", function() {
+        const name = this.dataset.name;
+        const income = this.dataset.income;
+        const days = parseInt(this.dataset.days);
+        const earned = parseInt(this.dataset.earned);
+        const total = parseInt(this.dataset.total);
+
+        // Fill modal fields
+        document.getElementById("modalName").textContent = name;
+        document.getElementById("modalIncome").textContent = income;
+        document.getElementById("modalDays").textContent = days;
+        document.getElementById("modalEarned").textContent = earned;
+        document.getElementById("modalTotal").textContent = total;
+
+        // Calculate progress
+        const progress = Math.min(Math.round((earned / total) * 100), 100);
+        const progressBar = document.getElementById("progressBar");
+        progressBar.style.width = progress + "%";
+        progressBar.setAttribute("aria-valuenow", progress);
+        progressBar.textContent = progress + "%";
+      });
+    });
+
     // flash message function
     function showFlashMessage(message, type="success") {
       const flashContainer = document.getElementById("flash-container");
@@ -315,3 +412,7 @@
 
 </body>
 </html>
+
+
+
+  

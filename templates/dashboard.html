@@ -174,141 +174,36 @@ MetaEarn â€” founded in 2013, empowering users with daily income opportunities â
     <div class="icon-box"><i class="bi bi-list-check"></i><p>Task</p></div>
   </div>
 
-    <!-- Product Section -->
-  <h4 class="text-white mb-3 ms-3">Product List</h4>
+    <h4 class="text-white mb-3 ms-3">Product List</h4>
 
-  <!-- Product cards -->
-  <div class="product-card">
-  <img src="/static/images/intern.png" alt="MetaEarn Intern" style="width:25%; height:auto; border-radius:8px; object-fit:cover; margin-right:15px;">
-  <div class="product-details" style="padding-left:10px;">
-    <h5>MetaEarn Intern</h5>
-    <p>Price: KSh250</p>
-    <p>Income: KSh50/day</p>
-    <p>Period: 8 days</p>
-    <p>Quantity: <span class="quantity">0/1</span></p>
-    <button class="btn btn-success w-100 buy-btn">Buy</button>
-</div>
+<div class="products">
+  {% for product in products %}
+  <div class="product-card" data-id="{{ product.id }}" data-price="{{ product.price }}">
+    <img src="{{ url_for('static', filename='images/' ~ product.image) }}" 
+         alt="{{ product.name }}"
+         style="width:25%; height:auto; border-radius:8px; object-fit:cover; margin-right:15px;">
+    <div class="product-details" style="padding-left:10px;">
+      <h5>{{ product.name }}</h5>
+      <p>Price: {{ product.price if product.price else "Coming Soon" }}</p>
+      <p>Income: {{ product.income if product.income else "Coming Soon" }}/day</p>
+      <p>Period: {{ product.days if product.days else "Coming Soon" }}</p>
+      <p>Upline: {{ product.upline if product.upline else "Coming Soon" }}</p>
 
-</div>
-
-  <div class="product-card">
-  <img src="/static/images/metearn1.png" alt="MetaEarn 1" style="width:25%; height: 100%; border-radius:8px; object-fit:cover; margin: right 25px;">
-  <div class="product-details" style="padding-left:10px;">
-    <h5>MetaEarn 1</h5>
-    <p>Price: KSh900</p>
-    <p>Income: KSh100/day</p>
-    <p>Period: 25 days</p>
-    <p>Upline: 81</p>
-    <button class="btn btn-success w-100">Buy</button>
+      {% if purchases|selectattr("product_sku", "equalto", product.sku)|list %}
+        <p class="quantity"><strong>Quantity:</strong> 1/1</p>
+        <button class="btn btn-secondary w-100" disabled>Sold Out</button>
+      {% elif not product.price %}
+        <button class="btn btn-secondary w-100" disabled>Unavailable</button>
+      {% else %}
+        <p class="quantity"><strong>Quantity:</strong> 0/1</p>
+        <!-- âœ… Link to buy.html confirmation -->
+        <a href="{{ url_for('buy', product_id=product.id) }}" class="btn btn-success w-100">Buy</a>
+      {% endif %}
+    </div>
   </div>
+  {% endfor %}
 </div>
-
-<div class="product-card">
-  <img src="/static/images/metearn2.png" alt="MetaEarn 2" style="width:25%; height:auto; border-radius:8px; object-fit:cover; margin-right:15px;">
-  <div class="product-details" style="padding-left:10px;">
-    <h5>MetaEarn 2</h5>
-    <p>Price: KSh2200</p>
-    <p>Income: KSh200/day</p>
-    <p>Period: 30 days</p>
-    <p>Upline: 176</p>
-    <button class="btn btn-success w-100">Buy</button>
-  </div>
 </div>
-
-<div class="product-card">
-  <img src="/static/images/metearn3.png" alt="MetaEarn 3" style="width:25%; height:auto; border-radius:8px; object-fit:cover; margin-right:15px;">
-  <div class="product-details" style="padding-left:10px;">
-    <h5>MetaEarn 3</h5>
-    <p>Price: KSh3500</p>
-    <p>Income: KSh301/day</p>
-    <p>Period: 40 days</p>
-    <p>Upline: 245</p>
-    <button class="btn btn-success w-100">Buy</button>
-  </div>
-</div>
-
-<div class="product-card">
-  <img src="/static/images/metearn4.png" alt="MetaEarn 4" style="width:25%; height:auto; border-radius:8px; object-fit:cover; margin-right:15px;">
-  <div class="product-details" style="padding-left:10px;">
-    <h5>MetaEarn 4</h5>
-    <p>Price: KSh5500</p>
-    <p>Income: KSh450/day</p>
-    <p>Period: 45 days</p>
-    <p>Upline: 355</p>
-    <button class="btn btn-success w-100">Buy</button>
-  </div>
-</div>
-
-<div class="product-card">
-  <img src="/static/images/metearn5.png" alt="MetaEarn 5" style="width:25%; height:auto; border-radius:8px; object-fit:cover; margin-right:15px;">
-  <div class="product-details" style="padding-left:10px;">
-    <h5>MetaEarn 5</h5>
-    <p>Price: KSh12000</p>
-    <p>Income: KSh1020/day</p>
-    <p>Period: 60 days</p>
-    <p>Upline: 875</p>
-    <button class="btn btn-success w-100">Buy</button>
-  </div>
-</div>
-
-  <div class="product-card">
-  <img src="/static/images/metearn6.png" alt="MetaEarn 6" style="width:25%; height:auto; border-radius:8px; object-fit:cover; margin-right:15px;">
-  <div class="product-details" style="padding-left:10px;">
-    <h5>MetaEarn 6</h5>
-    <p>Price: KSh21000</p>
-    <p>Income: KSh1890/day</p>
-    <p>Period: 90 days</p>
-    <p>Upline: 1260</p>
-    <button class="btn btn-success w-100">Buy</button>
-  </div>
-</div>
-
-<div class="product-card">
-  <img src="/static/images/metearn7.png" alt="MetaEarn 7" style="width:25%; height:auto; border-radius:8px; object-fit:cover; margin-right:15px;">
-  <div class="product-details" style="padding-left:10px;">
-    <h5>MetaEarn 7</h5>
-    <p>Price: KSh35000</p>
-    <p>Income: KSh3150/day</p>
-    <p>Period: 100 days</p>
-    <p>Upline: 1750</p>
-    <button class="btn btn-success w-100">Buy</button>
-  </div>
-</div>
-
-<div class="product-card">
-  <img src="/static/images/metearn8.png" alt="MetaEarn 8" style="width:25%; height:auto; border-radius:8px; object-fit:cover; margin-right:15px;">
-  <div class="product-details" style="padding-left:10px;">
-    <h5>MetaEarn 8</h5>
-    <p>Price: KSh49000</p>
-    <p>Income: KSh4410/day</p>
-    <p>Period: 120 days</p>
-    <p>Upline: 2450</p>
-    <button class="btn btn-success w-100">Buy</button>
-  </div>
-</div>
-
-<div class="product-card">
-  <img src="/static/images/metearn9.png" alt="MetaEarn 9" style="width:25%; height:auto; border-radius:8px; object-fit:cover; margin-right:15px;">
-  <div class="product-details" style="padding-left:10px;">
-    <h5>MetaEarn 9</h5>
-    <p>Price: KSh68000</p>
-    <p>Income: KSh6120/day</p>
-    <p>Period: 150 days</p>
-    <p>Upline: 4808</p>
-    <button class="btn btn-success w-100">Buy</button>
-  </div>
-</div>
-
-<div class="product-card">
-  <img src="/static/images/metearn10.png" alt="MetaEarn 10" style="width:25%; height:auto; border-radius:8px; object-fit:cover; margin-right:15px;">
-  <div class="product-details" style="padding-left:10px;">
-    <h5>MetaEarn 10</h5>
-    <p>Price: Coming Soon</p>
-    <p>Income: Coming Soon</p>
-    <p>Period: Coming Soon</p>
-    <p>Upline: Coming Soon</p>
-    <button class="btn btn-secondary w-100" disabled>Unavailable</button>
-  </div>
 </div>
 
   </div>
@@ -352,6 +247,19 @@ MetaEarn â€” founded in 2013, empowering users with daily income opportunities â
   <footer style="display:none;"></footer>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const alerts = document.querySelectorAll(".alert");
+  alerts.forEach(alert => {
+    setTimeout(() => {
+      alert.classList.remove("show");
+      setTimeout(() => alert.remove(), 500); // remove after fade
+    }, 3000); // 3 seconds
+  });
+});
+</script>
+
 
 <script>
 function showFlashMessage(message, type="success") {

@@ -286,6 +286,7 @@ def transactions():
         )
 
 
+
 # Define product_map globally so all routes can use it
 product_map = {
     "SKU-1": {
@@ -914,22 +915,8 @@ def dashboard():
         # Query withdrawals
         withdrawals = Withdrawal.query.filter_by(user_id=user.id).order_by(Withdrawal.created_at.desc()).all()
 
-        # Static product catalog (could later come from DB)
-        products = [
-    {"id": 1, "sku": "SKU-1", "name": "MetaEarn Intern", "price": 250, "income": 50, "days": 8, "upline": None, "image": "intern.png"},
-    {"id": 2, "sku": "SKU-2", "name": "MetaEarn 1", "price": 900, "income": 100, "days": 25, "upline": None, "image": "metearn1.png"},
-    {"id": 3, "sku": "SKU-3", "name": "MetaEarn 2", "price": 2200, "income": 200, "days": 30, "upline": 176, "image": "metearn2.png"},
-    {"id": 4, "sku": "SKU-4", "name": "MetaEarn 3", "price": 3500, "income": 301, "days": 40, "upline": 245, "image": "metearn3.png"},
-    {"id": 5, "sku": "SKU-5", "name": "MetaEarn 4", "price": 5500, "income": 450, "days": 45, "upline": 355, "image": "metearn4.png"},
-    {"id": 6, "sku": "SKU-6", "name": "MetaEarn 5", "price": 12000, "income": 1020, "days": 60, "upline": 875, "image": "metearn5.png"},
-    {"id": 7, "sku": "SKU-7", "name": "MetaEarn 6", "price": 21000, "income": 1890, "days": 90, "upline": 1260, "image": "metearn6.png"},
-    {"id": 8, "sku": "SKU-8", "name": "MetaEarn 7", "price": 35000, "income": 3150, "days": 100, "upline": 1750, "image": "metearn7.png"},
-    {"id": 9, "sku": "SKU-9", "name": "MetaEarn 8", "price": 49000, "income": 4410, "days": 120, "upline": 2450, "image": "metearn8.png"},
-    {"id": 10, "sku": "SKU-10", "name": "MetaEarn 9", "price": 68000, "income": 6120, "days": 150, "upline": 4808, "image": "metearn9.png"},
-    {"id": 11, "sku": "SKU-11", "name": "MetaEarn 10", "price": None, "income": None, "days": None, "upline": None, "image": "metearn10.png"},
-]
-
-
+        # Query products from DB (only available ones)
+        products = Product.query.filter_by(available=1).all()
 
         return render_template(
             "dashboard.html",
@@ -950,6 +937,7 @@ def dashboard():
             withdrawals=[],
             products=[]
         )
+
 
 
 

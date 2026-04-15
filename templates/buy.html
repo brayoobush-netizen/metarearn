@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+  body {
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    font-family: 'Poppins', sans-serif;
+    color: #fff;
+  }
+  .investment-card {
+    background: #fff;
+    color: #333;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    overflow: hidden;
+    animation: fadeInUp 0.8s ease;
+  }
+  .investment-header {
+    background: linear-gradient(90deg, #28a745, #218838);
+    color: #fff;
+    padding: 20px;
+    text-align: center;
+  }
+  .investment-body {
+    padding: 30px;
+    text-align: center;
+  }
+  .investment-body p {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+  }
+  .btn-invest {
+    background: linear-gradient(90deg, #ffcc00, #ff9900);
+    border: none;
+    color: #000;
+    font-weight: bold;
+    font-size: 1.2rem;
+    padding: 15px;
+    border-radius: 10px;
+    transition: transform 0.2s ease;
+  }
+  .btn-invest:hover {
+    transform: scale(1.05);
+  }
+  .btn-back {
+    margin-top: 15px;
+    background: #6c757d;
+    border: none;
+    color: #fff;
+    font-weight: bold;
+    padding: 12px;
+    border-radius: 10px;
+  }
+  .btn-disabled {
+    background: #ccc;
+    color: #666;
+    font-weight: bold;
+    padding: 15px;
+    border-radius: 10px;
+    cursor: not-allowed;
+  }
+  .success-message {
+    font-size: 1.2rem;
+    color: #28a745;
+    font-weight: bold;
+    margin-top: 20px;
+  }
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="investment-card">
+        <div class="investment-header">
+          <h2>🚀 {{ product.name }}</h2>
+          <p>Premium Investment Opportunity</p>
+        </div>
+        <div class="investment-body">
+          <p><strong>Invest:</strong> KSh{{ product.price }}</p>
+          <p><strong>Income:</strong> KSh{{ product.income }}/day</p>
+          <p><strong>Period:</strong> {{ product.days }} days</p>
+          <p><strong>Total Return:</strong> KSh{{ product.income * product.days }}</p>
+
+          <!-- Flash messages -->
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+              {% for category, message in messages %}
+                <div class="alert alert-{{ category }} mt-3">{{ message }}</div>
+                {% if "successful" in message %}
+                  <div class="success-message">✔ Purchase successful! You can access your active products on the <a href="{{ url_for('product') }}" style="color:#28a745;">Product page</a>.</div>
+                  <script>
+                    confetti({
+                      particleCount: 300,
+                      spread: 100,
+                      origin: { y: 0.6 },
+                      colors: ['#ffcc00','#28a745','#17a2b8','#ffc107']
+                    });
+                  </script>
+                {% endif %}
+              {% endfor %}
+            {% endif %}
+          {% endwith %}
+
+          <!-- Show Sold Out if already purchased -->
+          {% if purchased %}
+            <button class="btn-disabled w-100" disabled>Sold Out</button>
+          {% else %}
+            <form method="post" class="mt-4">
+              <button type="submit" class="btn btn-invest w-100">💰 Confirm Purchase</button>
+            </form>
+          {% endif %}
+
+          <!-- Back to Dashboard -->
+          <a href="{{ url_for('dashboard') }}" class="btn btn-back w-100 mt-3">← Back to Dashboard</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Confetti script -->
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+{% endblock %}
