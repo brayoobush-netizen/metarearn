@@ -1,22 +1,29 @@
 from flask import (
-    Flask, render_template, request,
-    redirect, url_for, session, flash, send_from_directory, abort
+    Flask, render_template, Blueprint, request,
+    redirect, url_for, session, flash,
+    send_from_directory, abort, jsonify
 )
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone, date
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import func
 from flask_migrate import Migrate
+from sqlalchemy import func
 from flask_login import (
-    LoginManager, current_user, login_required, login_user, logout_user
+    LoginManager, current_user,
+    login_required, login_user, logout_user
 )
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-from models import db, User, Recharge, Withdrawal, Purchase   # ✅ include Purchase too
-import random
-import os
-import traceback
+from models import db, User, Recharge, Withdrawal, Purchase, Product
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
+import os
+import random
+import traceback
+import requests
+from requests.auth import HTTPBasicAuth
+import base64
+
+
 
 # -------------------------
 # App setup
@@ -86,8 +93,68 @@ def features():
 @app.route("/product")
 @login_required
 def product():
-    active_purchases = current_user.purchases
-    return render_template("product.html", purchases=active_purchases, user=current_user)
+    user = current_user
+    purchases = Purchase.query.filter_by(user_id=user.id).all()
+
+    accumulated_income = 0
+    todays_income = 0
+    total_investments = len(purchases)
+
+    for p in purchases:
+        days_elapsed = (date.today() - p.start_date.date()).days
+        days_elapsed = max(0, min(days_elapsed, p.period_days))
+
+        earned = days_elapsed * p.income_per_day
+        accumulated_income += earned
+
+        if p.end_date.date() >= date.today():
+            todays_income += p.income_per_day
+            p.status = "Active"
+        else:
+            p.status = "Expired"
+
+        # Attach extra fields
+        p.calculated_earned = earned
+        p.days_remaining = max((p.end_date.date() - date.today()).days, 0)
+        p.total_return = p.income_per_day * p.period_days
+
+        # Map product name and image using product_sku
+        if p.product_sku in product_map:
+            product_info = product_map[p.product_sku]
+            p.product_name = product_info["name"]
+            p.image = product_info["image"]
+        else:
+            p.product_name = "Unknown Product"
+            p.image = "default.png"
+
+    active_purchases = [p for p in purchases if p.status == "Active"]
+
+    # Query all products
+    products = Product.query.all()
+
+    # Build a set of SKUs the user already owns
+    purchased_skus = {p.product_sku for p in purchases}
+
+    # Attach flags to each product
+    for prod in products:
+        prod.is_owned = prod.sku in purchased_skus
+
+    return render_template(
+        "product.html",
+        products=products,
+        purchases=purchases,
+        active_purchases=active_purchases,
+        accumulated_income=accumulated_income,
+        todays_income=todays_income,
+        total_investments=total_investments,
+        available_balance=user.wallet_balance
+    )
+
+
+
+
+
+
 
 @app.route("/team")
 @login_required
@@ -139,13 +206,18 @@ def register():
         # Referral code can come from form OR link (?ref=...)
         ref_code = request.form.get("referral_code") or request.args.get("ref")
 
+        # ✅ Require Gmail
+        if not email.endswith("@gmail.com"):
+            flash("Only Gmail addresses are allowed.", "danger")
+            return redirect(url_for("register"))
+
         if not email or not password:
-            flash("Please provide email and password.", "error")
+            flash("Please provide email and password.", "danger")
             return redirect(url_for("register"))
 
         existing_user = User.query.filter_by(email=email).first()
         if existing_user:
-            flash("Email already registered. Please log in.", "error")
+            flash("Email already registered. Please log in.", "warning")
             return redirect(url_for("login"))
 
         # Hash password
@@ -181,67 +253,181 @@ def register():
         db.session.add(new_user)
         db.session.commit()
 
-        # OTP generation
-        otp = str(random.randint(100000, 999999))
-        session["otp"] = otp
-        session["pending_user_id"] = new_user.id
-        session["pending_email"] = email
-
-        # Send OTP via SendGrid
-        try:
-            message = Mail(
-                from_email="metarearn@gmail.com",
-                to_emails=email,
-                subject="MetaEarn OTP Verification",
-                html_content=f"<h3>Your OTP code is <b>{otp}</b></h3>"
-            )
-            sg = SendGridAPIClient(os.environ.get("SENDGRID_API_KEY"))
-            sg.send(message)
-            flash("OTP sent to your email. Please verify.")
-        except Exception as e:
-            print("SendGrid error:", e)
-            flash("Could not send OTP email. Check server logs.", "warning")
-
-        return redirect(url_for("verify"))
+        flash("Account created successfully. Please log in.", "success")
+        return redirect(url_for("login"))
 
     return render_template("register.html")
 
-@app.route("/buy", methods=["POST"])
+
+# -------------------------
+# STK Push Route
+# -------------------------
+
+@app.route('/transactions')
 @login_required
-def buy_product():
-    data = request.get_json()
-    product_id = data["productId"]
-    price = int(data["price"])
+def transactions():
+    try:
+        withdrawals = Withdrawal.query.filter_by(
+            user_id=current_user.id
+        ).order_by(Withdrawal.created_at.desc()).all()
 
-    # Example product lookup (you can store in dict or DB)
-    product_map = {
-        "ME0": {"name": "MetaEarn Intern", "income": 50, "period": 8},
-        "ME1": {"name": "MetaEarn 1", "income": 100, "period": 25},
-        # ... add all others ...
+        return render_template(
+            'transactions.html',
+            withdrawals=withdrawals,
+            current_user=current_user
+        )
+    except Exception as e:
+        traceback.print_exc()
+        flash('Could not load transactions.', 'error')
+        return render_template(
+            'transactions.html',
+            withdrawals=[],
+            current_user=current_user
+        )
+
+
+# Define product_map globally so all routes can use it
+product_map = {
+    "SKU-1": {
+        "name": "MetaEarn Intern",
+        "price": 250,
+        "income": 50,
+        "days": 8,
+        "image": "intern.png"
+    },
+    "SKU-2": {
+        "name": "MetaEarn 1",
+        "price": 900,
+        "income": 100,
+        "days": 25,
+        "image": "metearn1.png"
+    },
+    "SKU-3": {
+        "name": "MetaEarn 2",
+        "price": 2200,
+        "income": 200,
+        "days": 30,
+        "image": "metearn2.png"
+    },
+    "SKU-4": {
+        "name": "MetaEarn 3",
+        "price": 3500,
+        "income": 301,
+        "days": 40,
+        "image": "metearn3.png"
+    },
+    "SKU-5": {
+        "name": "MetaEarn 4",
+        "price": 5500,
+        "income": 450,
+        "days": 45,
+        "image": "metearn4.png"
+    },
+    "SKU-6": {
+        "name": "MetaEarn 5",
+        "price": 12000,
+        "income": 1020,
+        "days": 60,
+        "image": "metearn5.png"
+    },
+    "SKU-7": {
+        "name": "MetaEarn 6",
+        "price": 21000,
+        "income": 1890,
+        "days": 90,
+        "image": "metearn6.png"
+    },
+    "SKU-8": {
+        "name": "MetaEarn 7",
+        "price": 35000,
+        "income": 3150,
+        "days": 100,
+        "image": "metearn7.png"
+    },
+    "SKU-9": {
+        "name": "MetaEarn 8",
+        "price": 49000,
+        "income": 4410,
+        "days": 120,
+        "image": "metearn8.png"
+    },
+    "SKU-10": {
+        "name": "MetaEarn 9",
+        "price": 68000,
+        "income": 6120,
+        "days": 150,
+        "image": "metearn9.png"
+    },
+    "SKU-11": {
+        "name": "MetaEarn Pro",
+        "price": None,   # Coming Soon
+        "income": None,
+        "days": None,
+        "image": "metearn10.png"
     }
+}
 
-    if current_user.wallet_balance < price:
-        return jsonify({"error": "Insufficient balance"}), 400
 
-    if any(p.product_sku == product_id for p in current_user.purchases):
-        return jsonify({"error": "Already purchased"}), 400
 
-    current_user.wallet_balance -= price
 
-    product_info = product_map[product_id]
-    purchase = Purchase(
-        user_id=current_user.id,
-        product_sku=product_id,
-        product_name=product_info["name"],
-        price=price,
-        income_per_day=product_info["income"],
-        period_days=product_info["period"],
-        end_date=datetime.utcnow() + timedelta(days=product_info["period"])
-    )
-    db.session.add(purchase)
-    db.session.commit()
 
-    return jsonify({"success": True})
+
+
+
+
+
+@app.route("/buy/<int:product_id>", methods=["GET", "POST"])
+@login_required
+def buy(product_id):
+    # Convert product_id to SKU string
+    sku = f"SKU-{product_id}"
+    product = product_map.get(sku)
+
+    if not product:
+        flash("Product not found.", "danger")
+        return redirect(url_for("dashboard"))
+
+    purchased = Purchase.query.filter_by(user_id=current_user.id, product_sku=sku).first()
+
+    if request.method == "POST":
+        if purchased:
+            flash("You already purchased this product.", "warning")
+            return redirect(url_for("product"))
+
+        if current_user.wallet_balance < product["price"]:
+            flash("Insufficient balance.", "danger")
+            return redirect(url_for("buy", product_id=product_id))
+
+        # Deduct balance
+        current_user.wallet_balance -= product["price"]
+
+        # Create purchase
+        purchase = Purchase(
+            user_id=current_user.id,
+            product_sku=sku,
+            product_name=product["name"],
+            price=product["price"],
+            income_per_day=product["income"],
+            period_days=product["days"],
+            start_date=datetime.utcnow(),
+            end_date=datetime.utcnow() + timedelta(days=product["days"]),
+            earned=0.0,
+            status="Active"
+        )
+        db.session.add(purchase)
+        db.session.commit()
+
+        flash("Purchase successful!", "success")
+        return redirect(url_for("product"))
+
+    return render_template("buy.html", product=product, purchased=purchased)
+
+
+
+
+
+
+
 
 @app.route("/password", methods=["GET", "POST"])
 @login_required
@@ -307,22 +493,28 @@ def login():
         email = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "")
 
+        # ✅ Only allow Gmail
+        if not email.endswith("@gmail.com"):
+            flash("Only Gmail addresses are allowed.", "danger")
+            return redirect(url_for("login"))
+
         user = User.query.filter_by(email=email).first()
         if user and check_password_hash(user.password, password):
-            login_user(user)  # <-- this tells Flask-Login you’re authenticated
-            flash("Welcome back!", "success")
+            login_user(user)
+            flash("Logged in successfully.", "success")
             return redirect(url_for("dashboard"))
         else:
-            flash("Invalid credentials", "error")
+            flash("Invalid email or password.", "danger")
             return redirect(url_for("login"))
 
     return render_template("login.html")
 
+
 @app.route("/logout", methods=["GET", "POST"])
 def logout():
     session.clear()
-    flash("You have been logged out.")
-    return redirect(url_for("landing"))
+    flash("You have been logged out." "info")
+    return redirect(url_for("login"))
 
 # -------------------------
 # Recharge
@@ -333,10 +525,20 @@ def recharge():
     user = current_user
 
     if request.method == "POST":
-        amount = request.form.get("amount")
+        amount_str = request.form.get("amount")
         provider = request.form.get("provider")
         transaction_id = request.form.get("transaction_id")
         screenshot_file = request.files.get("screenshot")
+
+        if not amount_str:
+            flash("Please select or enter an amount.", "error")
+            return redirect(url_for("recharge"))
+
+        try:
+            amount = int(amount_str)
+        except ValueError:
+            flash("Invalid amount entered.", "error")
+            return redirect(url_for("recharge"))
 
         filename = None
         if screenshot_file:
@@ -347,7 +549,7 @@ def recharge():
 
         new_recharge = Recharge(
             user_id=user.id,
-            amount=int(amount),
+            amount=amount,
             provider=provider,
             transaction_id=transaction_id,
             screenshot_filename=filename,
@@ -357,11 +559,9 @@ def recharge():
         db.session.commit()
 
         flash("Recharge request submitted successfully! Pending admin approval.", "recharge")
-
-        # ✅ Redirect after POST to avoid duplicate submissions
         return redirect(url_for("recharge"))
 
-    # Calculate today's recharge (last 24 hours, confirmed only)
+    # Calculate today's confirmed recharge
     now = datetime.utcnow()
     last_24h = now - timedelta(hours=24)
     todays_recharge = db.session.query(func.sum(Recharge.amount)).filter(
@@ -370,13 +570,12 @@ def recharge():
         Recharge.created_at >= last_24h
     ).scalar() or 0
 
-    # Calculate total confirmed recharge (all time)
+    # Calculate total confirmed recharge
     total_recharge = db.session.query(func.sum(Recharge.amount)).filter(
         Recharge.user_id == user.id,
         Recharge.status == "confirmed"
     ).scalar() or 0
 
-    # Only show this user's recharges
     recharges = Recharge.query.filter_by(user_id=user.id).order_by(Recharge.created_at.desc()).all()
 
     return render_template(
@@ -386,6 +585,7 @@ def recharge():
         todays_recharge=todays_recharge,
         total_recharge=total_recharge
     )
+
 
 @app.route("/admin/recharges")
 @login_required
@@ -397,10 +597,30 @@ def admin_recharges():
 @login_required
 def confirm_recharge(recharge_id):
     recharge = Recharge.query.get_or_404(recharge_id)
-    recharge.status = "confirmed"
-    recharge.user.wallet_balance += recharge.amount
-    db.session.commit()
-    flash(f"Recharge {recharge.transaction_id} confirmed for {recharge.user.email}", "success")
+
+    if recharge.status != "confirmed":
+        recharge.status = "confirmed"
+
+        # ✅ Bonus map
+        bonus_map = {
+            900: 150,
+            5500: 400,
+            21000: 900,
+            35000: 2500,
+            49000: 6250
+        }
+        bonus = bonus_map.get(recharge.amount, 0)
+
+        # ✅ Update user balance with amount + bonus
+        recharge.user.wallet_balance += recharge.amount + bonus
+
+        db.session.commit()
+        flash(
+            f"Recharge {recharge.transaction_id} confirmed for {recharge.user.email}. "
+            f"Amount {recharge.amount} KSh + Bonus {bonus} KSh added!",
+            "success"
+        )
+
     return redirect(url_for("admin_recharges"))
 
 @app.route("/admin/recharges/<int:recharge_id>/reject", methods=["POST"])
@@ -411,6 +631,7 @@ def reject_recharge(recharge_id):
     db.session.commit()
     flash(f"Recharge {recharge.transaction_id} rejected for {recharge.user.email}", "danger")
     return redirect(url_for("admin_recharges"))
+
 
 # -------------------------
 # Withdrawals
@@ -587,39 +808,93 @@ def withdraw_page():
     withdrawals = Withdrawal.query.filter_by(user_id=user.id).all()
     return render_template("withdraw.html", current_user=user, withdrawals=withdrawals)
 
-@app.route("/withdraw", methods=["GET", "POST"])
+@app.route('/withdraw', methods=['GET', 'POST'])
 @login_required
 def withdraw():
-    user = current_user
+    try:
+        # POST: create withdrawal request
+        if request.method == 'POST':
+            recipient_name = request.form.get('recipient_name', '').strip()
+            bank_name = request.form.get('bank_name', '').strip()
+            account_number = request.form.get('account_number', '').strip()
+            amount = request.form.get('amount', type=float)
+            note = request.form.get('note', '').strip()
 
-    if request.method == "POST":
-        account_number = request.form["account_number"]
-        recipient_name = request.form["recipient_name"]
-        bank_name = request.form["bank_name"]
-        amount = float(request.form["amount"])
+            # Basic validation
+            if not recipient_name or not bank_name or not account_number or not amount or amount <= 0:
+                flash('Please complete all required fields with valid values.', 'withdrawal')
+                return redirect(url_for('withdraw'))
 
-        if (user.wallet_balance or 0) >= amount:
-            user.wallet_balance -= amount
+            # Check balance
+            if current_user.wallet_balance < amount:
+                flash('Insufficient wallet balance for this withdrawal.', 'withdrawal')
+                return redirect(url_for('withdraw'))
 
-            new_withdrawal = Withdrawal(
-                user_id=user.id,
-                account_number=account_number,
+            # Create withdrawal record
+            w = Withdrawal(
+                user_id=current_user.id,
                 recipient_name=recipient_name,
                 bank_name=bank_name,
+                account_number=account_number,
                 amount=amount,
-                status="Pending"
+                status='Pending',
+                note=note,
+                created_at=datetime.utcnow()
             )
-            db.session.add(new_withdrawal)
+            db.session.add(w)
+
+            # Option A: deduct immediately
+            current_user.wallet_balance = current_user.wallet_balance - amount
+
             db.session.commit()
+            flash('Withdrawal request submitted. We will process it shortly.', 'withdrawal')
+            return redirect(url_for('withdraw'))
 
-            flash(f"Withdrew {amount} KES successfully!", "withdrawal")
-        else:
-            flash("Insufficient balance!", "withdrawal")
+        # GET: compute sums
+        now = datetime.utcnow()
+        last_24h = now - timedelta(hours=24)
 
-        return redirect(url_for("withdraw"))
+        todays_withdraw = db.session.query(
+            func.coalesce(func.sum(Withdrawal.amount), 0.0)
+        ).filter(
+            Withdrawal.user_id == current_user.id,
+            Withdrawal.created_at >= last_24h
+        ).scalar() or 0.0
 
-    withdrawals = Withdrawal.query.filter_by(user_id=user.id).order_by(Withdrawal.created_at.desc()).all()
-    return render_template("withdraw.html", withdrawals=withdrawals)
+        total_withdraw = db.session.query(
+            func.coalesce(func.sum(Withdrawal.amount), 0.0)
+        ).filter(
+            Withdrawal.user_id == current_user.id
+        ).scalar() or 0.0
+
+        withdrawals = Withdrawal.query.filter_by(user_id=current_user.id).order_by(Withdrawal.created_at.desc()).all()
+
+        # safe transactions_url to avoid BuildError
+        try:
+            transactions_url = url_for('transactions')
+        except Exception:
+            transactions_url = None
+
+        return render_template(
+            'withdraw.html',
+            current_user=current_user,
+            withdrawals=withdrawals,
+            todays_withdraw=todays_withdraw,
+            total_withdraw=total_withdraw,
+            transactions_url=transactions_url
+        )
+
+    except Exception as e:
+        traceback.print_exc()
+        flash('An error occurred while loading withdrawals. Try again later.', 'withdrawal')
+        return render_template(
+            'withdraw.html',
+            current_user=current_user,
+            withdrawals=[],
+            todays_withdraw=0.0,
+            total_withdraw=0.0,
+            transactions_url=None
+        )
 
 # -------------------------
 # Dashboard & Mine
@@ -627,13 +902,56 @@ def withdraw():
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    # current_user is automatically set by Flask-Login
     user = current_user  
 
-    # Query only if the user is authenticated
-    recharges = Recharge.query.filter_by(user_id=user.id).order_by(Recharge.created_at.desc()).all()
+    try:
+        # Query user’s purchases
+        purchases = Purchase.query.filter_by(user_id=user.id).all()
 
-    return render_template("dashboard.html", user=user, recharges=recharges)
+        # Query recharges
+        recharges = Recharge.query.filter_by(user_id=user.id).order_by(Recharge.created_at.desc()).all()
+
+        # Query withdrawals
+        withdrawals = Withdrawal.query.filter_by(user_id=user.id).order_by(Withdrawal.created_at.desc()).all()
+
+        # Static product catalog (could later come from DB)
+        products = [
+    {"id": 1, "sku": "SKU-1", "name": "MetaEarn Intern", "price": 250, "income": 50, "days": 8, "upline": None, "image": "intern.png"},
+    {"id": 2, "sku": "SKU-2", "name": "MetaEarn 1", "price": 900, "income": 100, "days": 25, "upline": None, "image": "metearn1.png"},
+    {"id": 3, "sku": "SKU-3", "name": "MetaEarn 2", "price": 2200, "income": 200, "days": 30, "upline": 176, "image": "metearn2.png"},
+    {"id": 4, "sku": "SKU-4", "name": "MetaEarn 3", "price": 3500, "income": 301, "days": 40, "upline": 245, "image": "metearn3.png"},
+    {"id": 5, "sku": "SKU-5", "name": "MetaEarn 4", "price": 5500, "income": 450, "days": 45, "upline": 355, "image": "metearn4.png"},
+    {"id": 6, "sku": "SKU-6", "name": "MetaEarn 5", "price": 12000, "income": 1020, "days": 60, "upline": 875, "image": "metearn5.png"},
+    {"id": 7, "sku": "SKU-7", "name": "MetaEarn 6", "price": 21000, "income": 1890, "days": 90, "upline": 1260, "image": "metearn6.png"},
+    {"id": 8, "sku": "SKU-8", "name": "MetaEarn 7", "price": 35000, "income": 3150, "days": 100, "upline": 1750, "image": "metearn7.png"},
+    {"id": 9, "sku": "SKU-9", "name": "MetaEarn 8", "price": 49000, "income": 4410, "days": 120, "upline": 2450, "image": "metearn8.png"},
+    {"id": 10, "sku": "SKU-10", "name": "MetaEarn 9", "price": 68000, "income": 6120, "days": 150, "upline": 4808, "image": "metearn9.png"},
+    {"id": 11, "sku": "SKU-11", "name": "MetaEarn 10", "price": None, "income": None, "days": None, "upline": None, "image": "metearn10.png"},
+]
+
+
+
+        return render_template(
+            "dashboard.html",
+            user=user,
+            purchases=purchases,
+            recharges=recharges,
+            withdrawals=withdrawals,
+            products=products
+        )
+    except Exception as e:
+        traceback.print_exc()
+        flash("Could not load dashboard.", "danger")
+        return render_template(
+            "dashboard.html",
+            user=user,
+            purchases=[],
+            recharges=[],
+            withdrawals=[],
+            products=[]
+        )
+
+
 
 @app.route("/financial")
 @login_required

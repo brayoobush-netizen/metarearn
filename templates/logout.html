@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+  body {
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    font-family: 'Poppins', sans-serif;
+    color: #fff;
+  }
+  .logout-card {
+    background: #fff;
+    color: #333;
+    border-radius: 10px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+    padding: 30px;
+    margin-top: 80px;
+    text-align: center;
+  }
+  .logout-card h2 {
+    color: #003366;
+    font-weight: 700;
+    margin-bottom: 20px;
+  }
+  .btn-login {
+    background: #28a745;
+    border: none;
+    color: #fff;
+    font-weight: 600;
+    padding: 12px;
+    border-radius: 6px;
+    width: 100%;
+    transition: background 0.2s ease;
+  }
+  .btn-login:hover {
+    background: #218838;
+  }
+</style>
+
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="logout-card">
+        <h2>You have been logged out</h2>
+        <p>Thank you for using MetaEarn. Please log in again to continue.</p>
+        <a href="{{ url_for('login') }}" class="btn btn-login">Login Again</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

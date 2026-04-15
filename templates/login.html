@@ -1,115 +1,85 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login - MetaEarn 🚀</title>
+{% extends "base.html" %}
+{% block content %}
+<style>
+  body {
+    /* Keep your gradient background */
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    font-family: 'Poppins', sans-serif;
+    color: #fff;
+  }
+  .login-card {
+    background: #fff;
+    color: #333;
+    border-radius: 10px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+    padding: 30px;
+    margin-top: 60px;
+  }
+  .login-header {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .login-header h2 {
+    color: #003366; /* corporate navy */
+    font-weight: 700;
+  }
+  .form-control {
+    border-radius: 6px;
+    margin-bottom: 15px;
+  }
+  .btn-login {
+    background: #28a745;
+    border: none;
+    color: #fff;
+    font-weight: 600;
+    padding: 12px;
+    border-radius: 6px;
+    width: 100%;
+    transition: background 0.2s ease;
+  }
+  .btn-login:hover {
+    background: #218838;
+  }
+  .btn-back {
+    margin-top: 15px;
+    background: #6c757d;
+    border: none;
+    color: #fff;
+    font-weight: 600;
+    padding: 12px;
+    border-radius: 6px;
+    width: 100%;
+  }
+</style>
 
-  <!-- Preload background image for faster paint -->
-  <link rel="preload" as="image" href="{{ url_for('static', filename='images/login-bg.jpg') }}">
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="login-card">
+        <div class="login-header">
+          <h2>Login to Your Account</h2>
+          <p>Use your Gmail and password</p>
+        </div>
 
-  <style>
-    html {
-      height: 100%;
-      background: url("{{ url_for('static', filename='images/login-bg.jpg') }}")
-                  no-repeat center 15% fixed;
-      background-size: cover;
-    }
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      height: 100%;
-    }
-    .container {
-      max-width: 400px;
-      margin: 40px auto;
-      background: rgba(255, 255, 255, 0.35); /* semi-transparent */
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-      backdrop-filter: blur(6px); /* subtle blur behind */
-      animation: fadeIn 0.8s ease-in-out; /* smooth arrival */
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    .brand {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    .brand h1 {
-      font-size: 28px;
-      margin: 0;
-      color: #007bff;
-    }
-    .brand .rocket {
-      font-size: 40px;
-    }
-    h2 {
-      text-align: center;
-      margin-bottom: 15px;
-    }
-    input[type="email"], input[type="password"] {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-    button {
-      width: 100%;
-      padding: 10px;
-      background: #007bff;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #0056b3;
-    }
-    .register-section {
-      margin-top: 20px;
-      text-align: center;
-    }
-    .register-section a {
-      color: #007bff;
-      text-decoration: none;
-      font-weight: bold;
-    }
-    /* Mobile tweaks */
-    @media (max-width: 480px) {
-      .container {
-        margin: 20px;
-        padding: 15px;
-      }
-      .brand h1 {
-        font-size: 22px;
-      }
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <!-- ✅ MetaEarn branding with rocket -->
-    <div class="brand">
-      <h1>MetaEarn <span class="rocket">🚀</span></h1>
-      <p>Welcome back, let’s launch!</p>
-    </div>
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
 
-    <h2>Log In</h2>
-    <form method="POST" action="{{ url_for('login') }}">
-      <input type="email" name="email" placeholder="Email" required>
-      <input type="password" name="password" placeholder="Password" required>
-      <button type="submit">Log In</button>
-    </form>
+        <form method="post">
+          <input type="email" name="email" class="form-control" placeholder="Gmail address" required>
+          <input type="password" name="password" class="form-control" placeholder="Password" required>
 
-    <!-- ✅ Register section below login -->
-    <div class="register-section">
-      <p>Don’t have an account yet?</p>
-      <a href="{{ url_for('register') }}">Create one here</a>
+          <button type="submit" class="btn btn-login">Login</button>
+        </form>
+
+        <a href="{{ url_for('register') }}" class="btn btn-back">Don’t have an account? Register</a>
+      </div>
     </div>
   </div>
-</body>
-</html>
+</div>
+{% endblock %}
