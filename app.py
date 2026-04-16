@@ -135,8 +135,27 @@ def product():
     # Build a set of SKUs the user already owns
     purchased_skus = {p.product_sku for p in purchases}
 
-    # Attach flags to each product
+    # Attach product_map info and flags to each product
     for prod in products:
+        if prod.sku in product_map:
+            meta = product_map[prod.sku]
+            prod.name = meta["name"]
+            prod.price = meta["price"]
+            prod.income_per_day = meta["income"]
+            prod.period_days = meta["days"]
+            prod.image = meta["image"]
+            prod.total_return = (
+                meta["income"] * meta["days"] if meta["income"] and meta["days"] else None
+            )
+        else:
+            prod.name = "Unknown Product"
+            prod.price = None
+            prod.income_per_day = None
+            prod.period_days = None
+            prod.image = "default.png"
+            prod.total_return = None
+
+        # Flag ownership
         prod.is_owned = prod.sku in purchased_skus
 
     return render_template(
@@ -149,6 +168,58 @@ def product():
         total_investments=total_investments,
         available_balance=user.wallet_balance
     )
+
+@app.route("/buy/<sku>", methods=["POST"])
+@login_required
+def buy_product(sku):
+    user = current_user
+
+    if sku not in product_map:
+        flash("Invalid product SKU", "danger")
+        return redirect(url_for("product"))
+
+    product_info = product_map[sku]
+
+    # Prevent buying if already owned
+    existing = Purchase.query.filter_by(user_id=user.id, product_sku=sku).first()
+    if existing:
+        flash("You already own this product.", "warning")
+        return redirect(url_for("product"))
+
+    # ✅ Check wallet balance
+    if user.wallet_balance < product_info["price"]:
+        flash("Insufficient funds. Please recharge your wallet.", "danger")
+        return redirect(url_for("product"))
+
+    # Deduct price from wallet
+    user.wallet_balance -= product_info["price"]
+
+    # Calculate dates
+    start_date = datetime.utcnow()
+    end_date = start_date + timedelta(days=product_info["days"])
+
+    # Create purchase
+    purchase = Purchase(
+        user_id=user.id,
+        product_sku=sku,
+        product_name=product_info["name"],
+        price=product_info["price"],
+        income_per_day=product_info["income"],
+        period_days=product_info["days"],
+        start_date=start_date,
+        end_date=end_date,
+        earned=0.0,
+        status="Active"
+    )
+
+    db.session.add(purchase)
+    db.session.commit()
+
+    flash(f"You successfully bought {product_info['name']}!", "success")
+    return redirect(url_for("product"))
+
+
+
 
 
 
@@ -906,17 +977,23 @@ def dashboard():
     user = current_user  
 
     try:
-        # Query user’s purchases
         purchases = Purchase.query.filter_by(user_id=user.id).all()
-
-        # Query recharges
         recharges = Recharge.query.filter_by(user_id=user.id).order_by(Recharge.created_at.desc()).all()
-
-        # Query withdrawals
         withdrawals = Withdrawal.query.filter_by(user_id=user.id).order_by(Withdrawal.created_at.desc()).all()
-
-        # Query products from DB (only available ones)
         products = Product.query.filter_by(available=1).all()
+
+        # Enrich products with product_map
+        for p in products:
+            if p.sku in product_map:
+                details = product_map[p.sku]
+                p.name = details.get("name", p.name)
+                p.price = details.get("price", p.price)
+                p.income_per_day = details.get("income", p.income_per_day)
+                p.period_days = details.get("days", p.period_days)
+                p.image = details.get("image", p.image)
+
+        # Tutorial flag
+        show_tutorial = not user.tutorial_seen
 
         return render_template(
             "dashboard.html",
@@ -924,8 +1001,10 @@ def dashboard():
             purchases=purchases,
             recharges=recharges,
             withdrawals=withdrawals,
-            products=products
+            products=products,
+            show_tutorial=show_tutorial
         )
+
     except Exception as e:
         traceback.print_exc()
         flash("Could not load dashboard.", "danger")
@@ -935,8 +1014,18 @@ def dashboard():
             purchases=[],
             recharges=[],
             withdrawals=[],
-            products=[]
+            products=[],
+            show_tutorial=False
         )
+
+@app.route("/skip_tutorial", methods=["POST"])
+@login_required
+def skip_tutorial():
+    user = current_user
+    user.tutorial_seen = True
+    db.session.commit()
+    return jsonify({"status": "ok"})
+
 
 
 

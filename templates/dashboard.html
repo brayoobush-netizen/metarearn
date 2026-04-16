@@ -95,6 +95,27 @@
     }
   </style>
 </head>
+
+<head>
+  <title>Dashboard</title>
+  <style>
+    .tutorial-overlay {
+      position: fixed; top:0; left:0; right:0; bottom:0;
+      background: rgba(0,0,0,0.8);
+      display: flex; justify-content: center; align-items: center;
+      z-index: 9999; color:#fff; text-align:center;
+    }
+    .tutorial-step {
+      max-width: 400px; background:#222; padding:20px; border-radius:10px;
+    }
+    .tutorial-step h3 { margin-bottom:10px; }
+    .tutorial-step button {
+      margin:5px; padding:8px 12px; border:none; border-radius:5px;
+      background:#444; color:#fff; cursor:pointer;
+    }
+  </style>
+</head>
+
 <body>
 
 <input type="hidden" id="userBalance" value="{{ user.balance }}">
@@ -174,6 +195,32 @@ MetaEarn â€” founded in 2013, empowering users with daily income opportunities â
     <div class="icon-box"><i class="bi bi-list-check"></i><p>Task</p></div>
   </div>
 
+{% if show_tutorial %}
+<!-- Tutorial Overlay -->
+<div id="tutorial-overlay" class="tutorial-overlay">
+  <div class="tutorial-step" id="step-1">
+    <h3>Recharge</h3>
+    <p>Use this button to add funds via M-Pesa STK Push.</p>
+    <button onclick="nextStep(2)">Next</button>
+    <button onclick="skipTutorial()">Skip Tutorial</button>
+  </div>
+
+  <div class="tutorial-step" id="step-2" style="display:none;">
+    <h3>Withdraw</h3>
+    <p>Withdraw your earnings securely to your wallet.</p>
+    <button onclick="nextStep(3)">Next</button>
+    <button onclick="skipTutorial()">Skip Tutorial</button>
+  </div>
+
+  <div class="tutorial-step" id="step-3" style="display:none;">
+    <h3>Buy Products</h3>
+    <p>Select a MetaEarn product to start earning daily income.</p>
+    <button onclick="skipTutorial()">Finish</button>
+  </div>
+</div>
+{% endif %}
+
+
     <h4 class="text-white mb-3 ms-3">Product List</h4>
 
 <div class="products">
@@ -185,9 +232,16 @@ MetaEarn â€” founded in 2013, empowering users with daily income opportunities â
     <div class="product-details" style="padding-left:10px;">
       <h5>{{ product.name }}</h5>
       <p>Price: {{ product.price if product.price else "Coming Soon" }}</p>
-      <p>Income: {{ product.income if product.income else "Coming Soon" }}/day</p>
-      <p>Period: {{ product.days if product.days else "Coming Soon" }}</p>
-      <p>Upline: {{ product.upline if product.upline else "Coming Soon" }}</p>
+<p>Income: {{ product.income_per_day if product.income_per_day else "Coming Soon" }}/day</p>
+<p>Period: {{ product.period_days if product.period_days else "Coming Soon" }}</p>
+<p>Total Returns: 
+  {% if product.income_per_day and product.period_days %}
+    {{ product.income_per_day * product.period_days }}
+  {% else %}
+    Coming Soon
+  {% endif %}
+</p>
+
 
       {% if purchases|selectattr("product_sku", "equalto", product.sku)|list %}
         <p class="quantity"><strong>Quantity:</strong> 1/1</p>
@@ -258,6 +312,43 @@ document.addEventListener("DOMContentLoaded", function() {
     }, 3000); // 3 seconds
   });
 });
+</script>
+
+<style>
+.tutorial-overlay {
+  position: fixed; top:0; left:0; right:0; bottom:0;
+  background: rgba(0,0,0,0.8);
+  display: none; justify-content: center; align-items: center;
+  z-index: 9999; color:#fff; text-align:center;
+}
+.tutorial-step { max-width: 400px; background:#222; padding:20px; border-radius:10px; }
+.tutorial-step h3 { margin-bottom:10px; }
+.tutorial-step button { margin:5px; padding:8px 12px; border:none; border-radius:5px; }
+</style>
+
+<script>
+function startTutorial() {
+  if (!localStorage.getItem("tutorialSeen")) {
+    document.getElementById("tutorial-overlay").style.display = "flex";
+    showStep(1);
+  }
+}
+function showStep(step) {
+  document.querySelectorAll(".tutorial-step").forEach(s => s.style.display="none");
+  document.getElementById("step-" + step).style.display = "block";
+}
+function nextStep(step) { showStep(step); }
+function skipTutorial() {
+  document.getElementById("tutorial-overlay").style.display = "none";
+  localStorage.setItem("tutorialSeen", "true");
+}
+
+function skipTutorial() {
+  document.getElementById("tutorial-overlay").style.display = "none";
+  fetch("/skip_tutorial", {method:"POST"}); // mark tutorial as skipped in DB
+}
+
+window.onload = startTutorial;
 </script>
 
 

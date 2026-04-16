@@ -42,7 +42,7 @@
       z-index:1000;
     }
     .logo img {width:44px;height:44px;border-radius:8px;}
-    .brand-text {font-weight:800;font-size:1rem;color:var(--glow);letter-spacing:0.3px;}
+    .brand-text {font-weight:800;font-size:1rem;color:var(--glow);}
     .balance {background:linear-gradient(90deg,#042018,#073022);
       padding:8px 12px;border-radius:10px;font-weight:700;
       color:var(--accent);box-shadow:0 2px 8px rgba(0,0,0,0.6);}
@@ -54,52 +54,141 @@
       left:0; right:0;
       overflow-y:auto; -webkit-overflow-scrolling:touch;
       padding:var(--content-pad);
-      padding-bottom:90px; /* clear space for bottom nav */
+      padding-bottom:90px;
     }
 
-    /* Summary card */
-    .gc-card {
-      display:flex; justify-content:space-between; align-items:center;
-      background:linear-gradient(135deg,#0fa86a,#0b7a4f);
-      border-radius:14px; padding:20px;
-      box-shadow:0 12px 28px rgba(11,122,79,0.3);
-      margin-bottom:20px;
+    /* Product grids */
+    .product-grid, .active-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin: 20px auto;
+      max-width: 960px;
     }
-    .gc-title {font-weight:800;font-size:1.2rem;color:#fff;}
-    .gc-value {font-weight:900;color:var(--glow);font-size:1.1rem;}
-
-    /* Quick actions */
-    .green-actions {display:flex;gap:12px;margin-bottom:20px;}
-    .green-action {
-      flex:1; display:flex; align-items:center; gap:10px;
-      background:linear-gradient(90deg,#1fb6ff,#00e0a0);
-      padding:12px; border-radius:12px; color:#042018;
-      font-weight:700; cursor:pointer;
-      box-shadow:0 6px 16px rgba(0,0,0,0.4);
-      transition:transform .15s;
+    .product-card, .active-card {
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      text-align: center;
+      font-size: 13px;
+      color: #fff;
     }
-    .green-action:hover {transform:translateY(-4px);}
-
-    /* Product cards */
-    .products {display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
-    .product-card {
-      background:linear-gradient(180deg,#101a2b,#0b1116);
-      border-radius:14px; padding:14px;
-      display:flex; gap:16px; align-items:center;
-      box-shadow:0 8px 24px rgba(0,0,0,0.6);
-      transition:transform .16s;
+    .product-card img, .active-card img {
+      width: 100%;
+      height: 80px;
+      object-fit: contain;
+      margin-bottom: 6px;
     }
-    .product-card:hover {transform:translateY(-6px);}
-    .product-card img {width:96px;height:96px;border-radius:10px;object-fit:cover;}
-    .product-details h5 {margin:0;font-size:1rem;color:var(--glow);}
-    .product-details p {margin:0;color:var(--muted);font-size:13px;}
-    .btn-buy {background:linear-gradient(90deg,var(--accent),var(--accent-2));border:none;color:#042018;font-weight:800;}
+    .product-card h4, .active-card h4 {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: var(--glow);
+    }
+    .blink { animation: blink 1.5s infinite; }
+    @keyframes blink {
+      0% { box-shadow: 0 0 6px #00e0a0; }
+      50% { box-shadow: 0 0 12px #ffd700; }
+      100% { box-shadow: 0 0 6px #00e0a0; }
+    }
 
-    /* Empty state */
-    .empty-card {
-      background:linear-gradient(180deg,#111827,#0b1220);
-      border-radius:12px; padding:20px; text-align:center;
-      color:var(--muted); border:1px dashed rgba(255,255,255,0.1);
+    .buy-btn {
+      background: green;
+      color: white;
+      padding: 6px 10px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .buy-btn:hover { background: darkgreen; }
+    .sold-out-btn {
+      background: red;
+      color: white;
+      padding: 6px 10px;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+    }
+
+/* Portfolio Summary Card with blinking glow */
+.blink-card {
+  background: linear-gradient(135deg, #0fa86a, #0b7a4f);
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 0 12px rgba(15,168,106,0.6);
+  animation: pulseGlow 3s infinite;
+  transition: transform 0.3s ease;
+}
+
+.blink-card:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 20px rgba(255,215,0,0.8);
+}
+
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 10px #00e0a0, inset 0 0 10px #0fa86a; }
+  50% { box-shadow: 0 0 20px #ffd700, inset 0 0 20px #1fb6ff; }
+  100% { box-shadow: 0 0 10px #00e0a0, inset 0 0 10px #0fa86a; }
+}
+
+/* Title and values with subtle animation */
+.gc-title {
+  font-weight: 800;
+  font-size: 1.2rem;
+  color: #fff;
+  animation: fadeSlide 4s infinite;
+}
+
+.gc-value {
+  font-weight: 900;
+  color: var(--glow);
+  font-size: 1.1rem;
+  animation: fadeSlide 4s infinite alternate;
+}
+
+@keyframes fadeSlide {
+  0% { opacity: 0.7; transform: translateY(-2px); }
+  50% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0.7; transform: translateY(-2px); }
+}
+
+
+    /* Flash messages */
+    #flash-container {
+      position: fixed;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2000;
+      width: 90%;
+      max-width: 400px;
+    }
+    .flash-message {
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 10px;
+      animation: fadeInOut 4s forwards;
+    }
+    .flash-success {
+      background: linear-gradient(90deg, #00e0a0, #1fb6ff);
+      color: #042018;
+    }
+    .flash-error {
+      background: linear-gradient(90deg, #ff4d4d, #ff0000);
+      color: #fff;
+    }
+    @keyframes fadeInOut {
+      0% { opacity: 0; transform: translateY(-20px); }
+      10% { opacity: 1; transform: translateY(0); }
+      90% { opacity: 1; }
+      100% { opacity: 0; transform: translateY(-20px); }
     }
 
     /* Bottom nav */
@@ -112,7 +201,10 @@
       box-shadow:0 -4px 12px rgba(0,0,0,0.4);
       z-index:1000; padding:8px 0;
     }
-    .bottom-nav a {color:#cfd6da;text-decoration:none;font-size:12px;display:flex;flex-direction:column;align-items:center;gap:4px;}
+    .bottom-nav a {
+      color:#cfd6da;text-decoration:none;font-size:12px;
+      display:flex;flex-direction:column;align-items:center;gap:4px;
+    }
     .bottom-nav i {font-size:20px;color:var(--glow);}
   </style>
 </head>
@@ -142,130 +234,139 @@
   <main class="main">
 
     <!-- Portfolio Summary -->
-    <section class="gc-card">
-      <div>
-        <div class="gc-title">Portfolio Summary</div>
-        <div class="gc-sub">Today's income and active investments</div>
-      </div>
-      <div>
-        <div class="gc-value">Accumulated: KSh {{ accumulated_income or "0.00" }}</div>
-        <div class="gc-value">Today: KSh {{ todays_income or "0.00" }}</div>
-        <div class="gc-value">Investments: {{ total_investments or 0 }}</div>
-      </div>
-    </section>
+<section class="gc-card blink-card">
+  <div>
+    <div class="gc-title">Portfolio Summary</div>
+    <div class="gc-sub">Today's income and active investments</div>
+  </div>
+  <div>
+    <div class="gc-value">Accumulated: KSh {{ accumulated_income or "0.00" }}</div>
+    <div class="gc-value">Today: KSh {{ todays_income or "0.00" }}</div>
+    <div class="gc-value">Investments: {{ total_investments or 0 }}</div>
+  </div>
+</section>
+
 
     <!-- Quick Actions -->
     <div class="green-actions">
       <button type="button" class="green-action" onclick="window.location.href='{{ url_for('recharge') }}'">
-  <i class="bi bi-cash-stack"></i> Recharge
-
-</button>
-<button type="button" class="green-action" onclick="window.location.href='{{ url_for('withdraw') }}'">
-  <i class="bi bi-cash-stack"></i> Withdraw
-</button>
-      <button type="button" class="green-action" id="btnSummaryDetails"><i class="bi bi-info-circle-fill"></i> Details</button>
+        <i class="bi bi-cash-stack"></i> Recharge
+      </button>
+      <button type="button" class="green-action" onclick="window.location.href='{{ url_for('withdraw') }}'">
+        <i class="bi bi-cash-stack"></i> Withdraw
+      </button>
+      <button type="button" class="green-action" id="btnSummaryDetails">
+        <i class="bi bi-info-circle-fill"></i> Details
+      </button>
     </div>
 
-    <!-- Products Section -->
-<h3 style="margin-top:20px;color:var(--accent);">Available Products</h3>
-<div class="products">
-  {% for p in products %}
-  <div class="product-card" data-id="{{ p.sku }}" data-price="{{ p.price|replace('KSh','') }}">
-    <img src="{{ url_for('static', filename='images/' ~ p.image) }}" alt="{{ p.name }}">
-    <div class="product-details">
-      <h5>{{ p.name }}</h5>
-      <p>Price: {{ p.price }}</p>
-      <p>Quantity: <span class="quantity">{{ p.available }}/1</span></p>
+<!-- Available Products Section -->
+<h3 style="color:var(--glow);">Available Products</h3>
+<div class="product-grid">
+  {% for product in products %}
+  <div class="product-card"
+       data-sku="{{ product.sku }}"
+       data-price="{{ product.price }}"
+       data-id="{{ product.id }}">
+      <img src="{{ url_for('static', filename='images/' ~ product.image) }}" alt="{{ product.name }}">
+      <h4>{{ product.name }}</h4>
 
-{% if p.is_owned %}
-  <button class="btn btn-secondary w-100" disabled>Already Purchased</button>
-{% elif p.available > 0 %}
-  <button class="btn btn-buy w-100 buy-btn">Buy</button>
-{% else %}
-  <button class="btn btn-secondary w-100" disabled>Sold Out</button>
-{% endif %}
+      {% if product.price %}
+          <p>Price: KSh{{ product.price }}</p>
+          <p>Income/Day: KSh{{ product.income_per_day }}</p>
+          <p>Period: {{ product.period_days }} days</p>
+          <p>Total Returns: KSh{{ product.total_return }}</p>
+      {% else %}
+          <p>Coming Soon</p>
+      {% endif %}
 
-    </div>
+      <div class="card-footer">
+          {% if product.is_owned %}
+              <p class="quantity">1/1</p>
+              <button class="sold-out-btn" disabled>Sold Out</button>
+          {% else %}
+              <p class="quantity">0/1</p>
+              <form action="{{ url_for('buy_product', sku=product.sku) }}" method="post">
+                  <button type="submit" class="buy-btn">Buy</button>
+              </form>
+          {% endif %}
+      </div>
   </div>
-{% endfor %}
-
-      
+  {% endfor %}
 </div>
 
-<!-- Active Products Section -->
-<h3 style="margin-top:30px;color:var(--accent-2);">Active Products</h3>
-<section class="products">
-  {% if active_purchases %}
-    {% for p in active_purchases %}
-    <article class="product-card active-card" role="button" tabindex="0"
-         data-bs-toggle="modal" data-bs-target="#activeProductModal"
-         data-name="{{ p.product_name }}"
-         data-income="{{ p.income_per_day }}"
-         data-days="{{ p.period_days }}"
-         data-earned="{{ p.calculated_earned }}"
-         data-total="{{ p.total_return }}">
-  <img src="{{ url_for('static', filename='images/' ~ p.image) }}" alt="{{ p.product_name }}">
-  <div class="product-details">
-    <h5>{{ p.product_name }}</h5>
-    <p>Days remaining: {{ p.days_remaining }}</p>
-    <p>Status: {{ p.status }}</p>
-  </div>
-</article>
-
-    {% endfor %}    
-  {% else %}
+        <!-- Active Products Section -->
+    <h3 style="color:var(--glow);">Active Products</h3>
+    {% if active_purchases %}
+    <div class="active-grid">
+      {% for p in active_purchases %}
+      <div class="active-card blink"
+           data-name="{{ p.product_name }}"
+           data-income="{{ p.income_per_day }}"
+           data-days="{{ p.period_days }}"
+           data-total="{{ p.total_return }}"
+           data-start="{{ p.start_date }}">
+          <img src="{{ url_for('static', filename='images/' ~ p.image) }}" alt="{{ p.product_name }}">
+          <h4>{{ p.product_name }}</h4>
+          <p>Income/Day: KSh{{ p.income_per_day }}</p>
+          <p>Days Remaining: {{ p.days_remaining }}</p>
+          <p>Total Return: KSh{{ p.total_return }}</p>
+          <div class="card-footer">
+              <button class="details-btn" data-bs-toggle="modal" data-bs-target="#activeProductModal">
+                  Press to View Details
+              </button>
+          </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
     <div class="empty-card">
       <h3 style="color:#fff;">No active products</h3>
       <p>You don’t currently have any active investments. Buy a package to start earning daily income.</p>
     </div>
-  {% endif %}
-</section>
+    {% endif %}
 
-<!-- Purchased Packages Section -->
-<h3 style="margin-top:30px;color:var(--glow);">My Purchased Packages</h3>
-<section class="products">
-  {% if purchases %}
-    {% for p in purchases %}
-    <article class="product-card" role="article" aria-labelledby="prod-{{ loop.index }}">
-      <!-- Product image -->
-      <img src="{{ url_for('static', filename='images/' ~ p.image) }}" 
-           alt="{{ p.product_name }}"
-           style="width:25%; height:auto; border-radius:8px; object-fit:cover; margin-right:15px;">
-      
-      <!-- Product details -->
-      <div class="product-details" style="flex:1;">
-        <h5 id="prod-{{ loop.index }}">{{ p.product_name }}</h5>
-        <p>Price: <strong style="color:var(--accent)">KSh{{ p.price }}</strong></p>
-        <p>Income per day: KSh{{ p.income_per_day }}</p>
-        <p>Period: {{ p.period_days }} days</p>
-        <p>Days remaining: {{ p.days_remaining }}</p>
-        <p>Total return: KSh{{ p.total_return }}</p>
-        <p>Earned so far: KSh{{ p.calculated_earned }}</p>
-        
-        <!-- Status pill -->
-        <div class="product-meta">
-          <div class="meta-pill">Status: {{ p.status }}</div>
-        </div>
-      </div>
-    </article>
-    {% endfor %}
-  {% else %}
-    <div class="empty-card">
-      <h3 style="color:#fff;">No purchases yet</h3>
-      <p>You haven't bought any packages. Visit <strong>Products</strong> to explore available packages and start investing.</p>
+    <!-- Purchased Packages Section (Collapsible) -->
+    <h3 style="margin-top:30px;color:var(--glow);">
+      <button class="toggle-btn" type="button" data-bs-toggle="collapse" data-bs-target="#purchasedCollapse">
+        My Purchased Packages <i class="bi bi-chevron-down"></i>
+      </button>
+    </h3>
+    <div id="purchasedCollapse" class="collapse">
+      <section class="products">
+        {% if purchases %}
+          {% for p in purchases %}
+          <article class="product-card" role="article" aria-labelledby="prod-{{ loop.index }}">
+            <img src="{{ url_for('static', filename='images/' ~ p.image) }}" 
+                 alt="{{ p.product_name }}"
+                 style="width:25%; height:auto; border-radius:8px; object-fit:cover; margin-right:15px;">
+            <div class="product-details" style="flex:1;">
+              <h5 id="prod-{{ loop.index }}">{{ p.product_name }}</h5>
+              <p>Price: <strong style="color:var(--accent)">KSh{{ p.price }}</strong></p>
+              <p>Income per day: KSh{{ p.income_per_day }}</p>
+              <p>Period: {{ p.period_days }} days</p>
+              <p>Days remaining: {{ p.days_remaining }}</p>
+              <p>Total return: KSh{{ p.total_return }}</p>
+              <p>Earned so far: KSh{{ p.calculated_earned }}</p>
+              <div class="product-meta">
+                <div class="meta-pill">Status: {{ p.status }}</div>
+              </div>
+            </div>
+          </article>
+          {% endfor %}
+        {% else %}
+          <div class="empty-card">
+            <h3 style="color:#fff;">No purchases yet</h3>
+            <p>You haven't bought any packages. Visit <strong>Products</strong> to explore available packages and start investing.</p>
+          </div>
+        {% endif %}
+      </section>
     </div>
-  {% endif %}
-</section>
 
-
-
-
-
+    <!-- Flash messages container -->
+    <div id="flash-container"></div>
 
   </main>
-
-  <!-- Flash messages container -->
-  <div id="flash-container" style="position:fixed;top:20px;right:20px;z-index:9999;max-width:300px;"></div>
 
   <!-- Bottom navigation -->
   <nav class="bottom-nav" role="navigation" aria-label="Bottom navigation">
@@ -276,88 +377,61 @@
     <a href="{{ url_for('mine') }}"><i class="bi bi-person-fill"></i><span>Mine</span></a>
   </nav>
 
-  <!-- Modals -->
-  <div class="modal fade" id="actionModal" tabindex="-1" aria-labelledby="actionModalLabel" aria-hidden="true">
+  <!-- Active Product Modal -->
+  <div class="modal fade" id="activeProductModal" tabindex="-1" aria-labelledby="activeProductLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content text-dark">
         <div class="modal-header">
-          <h5 class="modal-title" id="actionModalLabel">Action</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          <h5 class="modal-title" id="activeProductLabel">Active Product Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
-        <div class="modal-body" id="actionModalBody"></div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-primary" id="actionModalConfirm">Proceed</button>
-        </div>
-      </div>
-    </div>
-  </div>
+        <div class="modal-body">
+          <p><strong>Name:</strong> <span id="modalName"></span></p>
+          <p><strong>Income per day:</strong> KSh<span id="modalIncome"></span></p>
+          <p><strong>Period:</strong> <span id="modalDays"></span> days</p>
+          <p><strong>Earned so far:</strong> KSh<span id="modalEarned"></span></p>
+          <p><strong>Total return:</strong> KSh<span id="modalTotal"></span></p>
 
-  <div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-      <div class="modal-content text-dark">
-        <div class="modal-header">
-          <h5 class="modal-title" id="productModalLabel">Product Details</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body" id="productModalBody"></div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          <button type="button" class="btn btn-buy" id="productModalBuy">Buy / Reinvest</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-<!-- Active Product Modal -->
-<div class="modal fade" id="activeProductModal" tabindex="-1" aria-labelledby="activeProductLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content text-dark">
-      <div class="modal-header">
-        <h5 class="modal-title" id="activeProductLabel">Active Product Details</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <p><strong>Name:</strong> <span id="modalName"></span></p>
-        <p><strong>Income per day:</strong> KSh<span id="modalIncome"></span></p>
-        <p><strong>Period:</strong> <span id="modalDays"></span> days</p>
-        <p><strong>Earned so far:</strong> KSh<span id="modalEarned"></span></p>
-        <p><strong>Total return:</strong> KSh<span id="modalTotal"></span></p>
-
-        <!-- Progress bar -->
-        <div class="progress" style="height:20px;">
-          <div id="progressBar" class="progress-bar bg-success" role="progressbar"
-               style="width:0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
-            0%
+          <!-- Progress bar -->
+          <div class="progress" style="height:20px;">
+            <div id="progressBar" class="progress-bar bg-success" role="progressbar"
+                 style="width:0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+              0%
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
-</div>
 
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- Your existing JS logic (flash messages, buy button, modals) -->
+  <!-- JS Logic -->
   <script>
     // Active product modal logic
-    document.querySelectorAll(".active-card").forEach(card => {
-      card.addEventListener("click", function() {
-        const name = this.dataset.name;
-        const income = this.dataset.income;
-        const days = parseInt(this.dataset.days);
-        const earned = parseInt(this.dataset.earned);
-        const total = parseInt(this.dataset.total);
+    document.querySelectorAll(".details-btn").forEach(btn => {
+      btn.addEventListener("click", function() {
+        const card = this.closest(".active-card");
+        const name = card.dataset.name;
+        const income = parseFloat(card.dataset.income);
+        const days = parseInt(card.dataset.days);
+        const total = parseFloat(card.dataset.total);
+        const startDate = new Date(card.dataset.start);
 
-        // Fill modal fields
+        // Calculate elapsed days
+        const now = new Date();
+        const elapsedDays = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
+        const earned = Math.min(income * elapsedDays, total);
+
+        // Fill modal
         document.getElementById("modalName").textContent = name;
-        document.getElementById("modalIncome").textContent = income;
+        document.getElementById("modalIncome").textContent = income.toFixed(2);
         document.getElementById("modalDays").textContent = days;
-        document.getElementById("modalEarned").textContent = earned;
-        document.getElementById("modalTotal").textContent = total;
+        document.getElementById("modalEarned").textContent = earned.toFixed(2);
+        document.getElementById("modalTotal").textContent = total.toFixed(2);
 
-        // Calculate progress
+        // Progress bar
         const progress = Math.min(Math.round((earned / total) * 100), 100);
         const progressBar = document.getElementById("progressBar");
         progressBar.style.width = progress + "%";
@@ -366,53 +440,41 @@
       });
     });
 
-    // flash message function
+    // Flash messages
     function showFlashMessage(message, type="success") {
       const flashContainer = document.getElementById("flash-container");
       const flash = document.createElement("div");
-      flash.className = `alert alert-${type} mt-2`;
+      flash.className = `flash-message ${type === "success" ? "flash-success" : "flash-error"}`;
       flash.textContent = message;
-      flash.style.opacity = "0";
-      flash.style.transition = "opacity 0.5s ease";
       flashContainer.appendChild(flash);
-      setTimeout(() => flash.style.opacity = "1", 50);
-      setTimeout(() => { flash.style.opacity = "0"; setTimeout(() => flash.remove(), 500); }, 3000);
+      setTimeout(() => flash.remove(), 4000);
     }
 
-    // buy button logic
+    // Buy button logic
     document.querySelectorAll(".buy-btn").forEach(btn => {
-      btn.addEventListener("click", function() {
+      btn.addEventListener("click", function(e) {
+        e.preventDefault();
         const card = this.closest(".product-card");
         const price = parseInt(card.dataset.price);
-        const quantityEl = card.querySelector(".quantity");
         const userBalanceEl = document.getElementById("userBalance");
         const userBalance = parseInt(userBalanceEl.value);
 
-        if (userBalance < price) { showFlashMessage("Insufficient balance!", "danger"); return; }
-        if (quantityEl.textContent === "1/1") { showFlashMessage("This product is already sold out!", "warning"); return; }
+        if (userBalance < price) {
+          showFlashMessage("Insufficient funds — please recharge your wallet.", "error");
+          return;
+        }
 
         if (confirm(`Confirm purchase for KSh${price}?`)) {
           userBalanceEl.value = userBalance - price;
-          quantityEl.textContent = "1/1";
           this.disabled = true;
-          this.classList.remove("btn-success");
-          this.classList.add("btn-secondary");
           this.textContent = "Sold Out";
           showFlashMessage("Purchase successful!", "success");
 
-          fetch("/buy", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ productId: card.dataset.id, price: price })
-          });
+          fetch(`/buy/${card.dataset.sku}`, { method: "POST" });
         }
       });
     });
   </script>
-
 </body>
 </html>
 
-
-
-  
