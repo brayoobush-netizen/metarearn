@@ -574,6 +574,10 @@ def login():
         if user and check_password_hash(user.password, password):
             login_user(user)
             flash("Logged in successfully.", "success")
+
+            # ✅ Redirect new users to tutorial first
+            if not user.tutorial_seen:
+                return redirect(url_for("tutorial"))
             return redirect(url_for("dashboard"))
         else:
             flash("Invalid email or password.", "danger")
@@ -582,11 +586,23 @@ def login():
     return render_template("login.html")
 
 
+
 @app.route("/logout", methods=["GET", "POST"])
 def logout():
     session.clear()
     flash("You have been logged out." "info")
     return redirect(url_for("login"))
+
+@app.route("/tutorial")
+@login_required
+def tutorial():
+    user = current_user
+    # If user already saw tutorial, send them to dashboard
+    if user.tutorial_seen:
+        return redirect(url_for("dashboard"))
+
+    return render_template("tutorial.html", user=user)
+
 
 # -------------------------
 # Recharge
@@ -974,15 +990,16 @@ def withdraw():
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    user = current_user  
+    user = current_user
 
     try:
+        # Query user-related data
         purchases = Purchase.query.filter_by(user_id=user.id).all()
         recharges = Recharge.query.filter_by(user_id=user.id).order_by(Recharge.created_at.desc()).all()
         withdrawals = Withdrawal.query.filter_by(user_id=user.id).order_by(Withdrawal.created_at.desc()).all()
         products = Product.query.filter_by(available=1).all()
 
-        # Enrich products with product_map
+        # Enrich products with product_map details
         for p in products:
             if p.sku in product_map:
                 details = product_map[p.sku]
@@ -992,8 +1009,8 @@ def dashboard():
                 p.period_days = details.get("days", p.period_days)
                 p.image = details.get("image", p.image)
 
-        # Tutorial flag
-        show_tutorial = not user.tutorial_seen
+        # Tutorial flag: show only if user has NOT seen it
+        show_tutorial = not bool(user.tutorial_seen)
 
         return render_template(
             "dashboard.html",
@@ -1018,13 +1035,17 @@ def dashboard():
             show_tutorial=False
         )
 
+
 @app.route("/skip_tutorial", methods=["POST"])
 @login_required
 def skip_tutorial():
     user = current_user
     user.tutorial_seen = True
     db.session.commit()
+    db.session.refresh(user)
     return jsonify({"status": "ok"})
+
+              
 
 
 

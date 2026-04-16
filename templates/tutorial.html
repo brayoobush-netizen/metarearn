@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MetaEarn Tutorial</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tutorial.css') }}">
+  <style>
+    /* Overlay background */
+    .tutorial-overlay {
+      position: fixed;
+      top:0; left:0; right:0; bottom:0;
+      background: rgba(0,0,0,0.7);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Step container */
+    .tutorial-step {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 8px;
+      max-width: 400px;
+      text-align: center;
+      display: none;
+    }
+
+    .tutorial-step.active {
+      display: block;
+    }
+
+    /* Progress indicator */
+    .progress {
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+      color: #555;
+    }
+
+    button {
+      margin: 0.5rem;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 4px;
+      background: #007bff;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div id="tutorial-overlay">
+    <!-- Step 1 -->
+    <div class="tutorial-step active" id="step-1">
+      <div class="progress">Step 1 of 5</div>
+      <h3>Recharge</h3>
+      <p>Use this button to add funds via M-Pesa STK Push. A prompt will appear on your phone to confirm payment.</p>
+      <button onclick="nextStep(2)">Next</button>
+      <button onclick="skipTutorial()">Skip</button>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="tutorial-step" id="step-2">
+      <div class="progress">Step 2 of 5</div>
+      <h3>Withdraw</h3>
+      <p>Withdraw your earnings securely to your wallet. Enter your account details and confirm.</p>
+      <button onclick="nextStep(3)">Next</button>
+      <button onclick="skipTutorial()">Skip</button>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="tutorial-step" id="step-3">
+      <div class="progress">Step 3 of 5</div>
+      <h3>Buy Products</h3>
+      <p>Select a MetaEarn product to start earning daily income. Each product shows price, period, and daily returns.</p>
+      <button onclick="nextStep(4)">Next</button>
+      <button onclick="skipTutorial()">Skip</button>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="tutorial-step" id="step-4">
+      <div class="progress">Step 4 of 5</div>
+      <h3>Dashboard Summary</h3>
+      <p>Track your wallet balance, total earnings, and views here. This is your main performance overview.</p>
+      <button onclick="nextStep(5)">Next</button>
+      <button onclick="skipTutorial()">Skip</button>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="tutorial-step" id="step-5">
+      <div class="progress">Step 5 of 5</div>
+      <h3>Navigation Bar</h3>
+      <p>Access your profile, settings, and logout options from the navigation bar at the top.</p>
+      <button onclick="finishTutorial()">Finish</button>
+    </div>
+  </div>
+
+  <script>
+    let currentStep = 1;
+
+    function nextStep(step) {
+      document.getElementById(`step-${currentStep}`).classList.remove("active");
+      document.getElementById(`step-${step}`).classList.add("active");
+      currentStep = step;
+    }
+
+    function skipTutorial() {
+      fetch("/skip_tutorial", { method: "POST" })
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === "ok") {
+            window.location.href = "/dashboard";
+          }
+        });
+    }
+
+    function finishTutorial() {
+      skipTutorial();
+    }
+  </script>
+</body>
+</html>
