@@ -115,6 +115,104 @@
       font-size: 12px;
     }
 
+.alive-btn {
+  background: linear-gradient(135deg, #28a745, #218838);
+  color: #fff;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 20px;
+  cursor: pointer;
+  box-shadow: 0 0 12px rgba(40, 167, 69, 0.6);
+  animation: pulseGlow 2s infinite;
+  transition: transform 0.2s ease-in-out;
+}
+
+.alive-btn:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 25px rgba(40, 167, 69, 0.9);
+}
+
+/* Quick Actions container */
+.green-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+/* Product card glow edges */
+.product-card {
+  background: var(--card);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  text-align: center;
+  font-size: 13px;
+  color: #fff;
+  position: relative;
+  box-shadow: 0 0 8px rgba(31,182,255,0.4); /* initial subtle glow */
+  animation: edgeGlow 6s infinite alternate; /* slower glow cycle */
+}
+
+/* Glow animation */
+@keyframes edgeGlow {
+  0%   { box-shadow: 0 0 8px rgba(31,182,255,0.4); }   /* blue glow */
+  50%  { box-shadow: 0 0 16px rgba(255,215,0,0.7); }   /* golden glow */
+  100% { box-shadow: 0 0 8px rgba(0,224,160,0.5); }    /* teal glow */
+}
+
+
+/* Alive action buttons */
+.green-action {
+  flex: 1; /* each button fills equal space in the row */
+  background: linear-gradient(135deg, #00e0a0, #1fb6ff);
+  color: #fff;
+  font-weight: 700;
+  font-size: 16px;
+  padding: 16px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: center;
+  box-shadow: 0 0 15px rgba(0, 224, 160, 0.6);
+  animation: pulseFlash 2s infinite;
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.green-action:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 25px rgba(31, 182, 255, 0.9);
+}
+
+/* Flashing pulse animation */
+@keyframes pulseFlash {
+  0%   { box-shadow: 0 0 10px rgba(0, 224, 160, 0.6); }
+  50%  { box-shadow: 0 0 25px rgba(255, 215, 0, 1); }
+  100% { box-shadow: 0 0 10px rgba(0, 224, 160, 0.6); }
+}
+
+/* Icons inside buttons */
+.green-action i {
+  font-size: 20px;
+  color: #ffd700; /* glowing gold icons */
+}
+
+
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 10px rgba(40, 167, 69, 0.6); }
+  50% { box-shadow: 0 0 25px rgba(40, 167, 69, 1); }
+  100% { box-shadow: 0 0 10px rgba(40, 167, 69, 0.6); }
+}
+
+
 /* Portfolio Summary Card with blinking glow */
 .blink-card {
   background: linear-gradient(135deg, #0fa86a, #0b7a4f);
@@ -190,6 +288,41 @@
       90% { opacity: 1; }
       100% { opacity: 0; transform: translateY(-20px); }
     }
+
+/* Modal backdrop cover */
+.modal-backdrop.show {
+  background-color: rgba(0, 0, 0, 0.75); /* darker overlay so modal stands out */
+}
+
+/* Modal content box */
+.modal-content {
+  background: linear-gradient(180deg, #101a2b, #0b1220); /* premium dark gradient */
+  color: #f1f1f1; /* light text for readability */
+  border-radius: 12px;
+  box-shadow: 0 0 25px rgba(255, 215, 0, 0.4); /* golden glow */
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Modal header */
+.modal-header {
+  background: linear-gradient(135deg, #28a745, #218838);
+  color: #fff;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Modal body text */
+.modal-body p, .modal-body ul li {
+  color: #e0e0e0; /* softer light gray for readability */
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* Modal footer */
+.modal-footer {
+  background: #0b1220;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+
 
     /* Bottom nav */
     .bottom-nav {
@@ -281,9 +414,16 @@
       {% endif %}
 
       <div class="card-footer">
-          {% if product.is_owned %}
+          {% set owned_purchase = purchases|selectattr("product_sku", "equalto", product.sku)|first %}
+          {% if owned_purchase %}
               <p class="quantity">1/1</p>
-              <button class="sold-out-btn" disabled>Sold Out</button>
+              {% if owned_purchase.status == "Completed" %}
+                <span class="status-completed">Completed ✅</span>
+              {% else %}
+                <button class="sold-out-btn" disabled>Sold Out</button>
+              {% endif %}
+          {% elif not product.price %}
+              <button class="btn btn-secondary w-100" disabled>Unavailable</button>
           {% else %}
               <p class="quantity">0/1</p>
               <form action="{{ url_for('buy_product', sku=product.sku) }}" method="post">
@@ -295,80 +435,93 @@
   {% endfor %}
 </div>
 
-        <!-- Active Products Section -->
-    <h3 style="color:var(--glow);">Active Products</h3>
-    {% if active_purchases %}
-    <div class="active-grid">
-      {% for p in active_purchases %}
-      <div class="active-card blink"
-           data-name="{{ p.product_name }}"
-           data-income="{{ p.income_per_day }}"
-           data-days="{{ p.period_days }}"
-           data-total="{{ p.total_return }}"
-           data-start="{{ p.start_date }}">
-          <img src="{{ url_for('static', filename='images/' ~ p.image) }}" alt="{{ p.product_name }}">
-          <h4>{{ p.product_name }}</h4>
-          <p>Income/Day: KSh{{ p.income_per_day }}</p>
-          <p>Days Remaining: {{ p.days_remaining }}</p>
-          <p>Total Return: KSh{{ p.total_return }}</p>
-          <div class="card-footer">
-              <button class="details-btn" data-bs-toggle="modal" data-bs-target="#activeProductModal">
-                  Press to View Details
-              </button>
-          </div>
-      </div>
-      {% endfor %}
-    </div>
-    {% else %}
-    <div class="empty-card">
-      <h3 style="color:#fff;">No active products</h3>
-      <p>You don’t currently have any active investments. Buy a package to start earning daily income.</p>
-    </div>
-    {% endif %}
 
-    <!-- Purchased Packages Section (Collapsible) -->
-    <h3 style="margin-top:30px;color:var(--glow);">
-      <button class="toggle-btn" type="button" data-bs-toggle="collapse" data-bs-target="#purchasedCollapse">
-        My Purchased Packages <i class="bi bi-chevron-down"></i>
-      </button>
-    </h3>
-    <div id="purchasedCollapse" class="collapse">
-      <section class="products">
-        {% if purchases %}
-          {% for p in purchases %}
-          <article class="product-card" role="article" aria-labelledby="prod-{{ loop.index }}">
-            <img src="{{ url_for('static', filename='images/' ~ p.image) }}" 
-                 alt="{{ p.product_name }}"
-                 style="width:25%; height:auto; border-radius:8px; object-fit:cover; margin-right:15px;">
-            <div class="product-details" style="flex:1;">
-              <h5 id="prod-{{ loop.index }}">{{ p.product_name }}</h5>
-              <p>Price: <strong style="color:var(--accent)">KSh{{ p.price }}</strong></p>
-              <p>Income per day: KSh{{ p.income_per_day }}</p>
-              <p>Period: {{ p.period_days }} days</p>
-              <p>Days remaining: {{ p.days_remaining }}</p>
-              <p>Total return: KSh{{ p.total_return }}</p>
-              <p>Earned so far: KSh{{ p.calculated_earned }}</p>
-              <div class="product-meta">
-                <div class="meta-pill">Status: {{ p.status }}</div>
-              </div>
+<!-- Active Products Section -->
+<h3 style="color:var(--glow);">Active Products</h3>
+{% if active_purchases %}
+<div class="active-grid">
+  {% for p in active_purchases %}
+  <div class="active-card blink"
+       data-name="{{ p.product_name }}"
+       data-income="{{ p.income_per_day }}"
+       data-days="{{ p.period_days }}"
+       data-total="{{ p.total_return }}"
+       data-start="{{ p.start_date }}">
+      <img src="{{ url_for('static', filename='images/' ~ p.image) }}" alt="{{ p.product_name }}">
+      <h4>{{ p.product_name }}</h4>
+      <p>Income/Day: KSh{{ p.income_per_day }}</p>
+      <p>Days Remaining: {{ p.days_remaining }}</p>
+      <p>Total Return: KSh{{ p.total_return }}</p>
+
+      {% if p.status == "Completed" %}
+        <span class="status-completed">Completed ✅</span>
+      {% endif %}
+
+      <div class="card-footer">
+          <button class="details-btn" data-bs-toggle="modal" data-bs-target="#activeProductModal">
+              Press to View Details
+          </button>
+      </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-card">
+  <h3 style="color:#fff;">No active products</h3>
+  <p>You don’t currently have any active investments. Buy a package to start earning daily income.</p>
+</div>
+{% endif %}
+
+
+<!-- Purchased Packages Section (Collapsible) -->
+<h3 style="margin-top:30px;color:var(--glow);">
+  <button class="toggle-btn" type="button" data-bs-toggle="collapse" data-bs-target="#purchasedCollapse">
+    My Purchased Packages <i class="bi bi-chevron-down"></i>
+  </button>
+</h3>
+<div id="purchasedCollapse" class="collapse">
+  <section class="products">
+    {% if purchases %}
+      {% for p in purchases %}
+      <article class="product-card" role="article" aria-labelledby="prod-{{ loop.index }}">
+        <img src="{{ url_for('static', filename='images/' ~ p.image) }}" 
+             alt="{{ p.product_name }}"
+             style="width:25%; height:auto; border-radius:8px; object-fit:cover; margin-right:15px;">
+        <div class="product-details" style="flex:1;">
+          <h5 id="prod-{{ loop.index }}">{{ p.product_name }}</h5>
+          <p>Price: <strong style="color:var(--accent)">KSh{{ p.price }}</strong></p>
+          <p>Income per day: KSh{{ p.income_per_day }}</p>
+          <p>Period: {{ p.period_days }} days</p>
+          <p>Days remaining: {{ p.days_remaining }}</p>
+          <p>Total return: KSh{{ p.total_return }}</p>
+          <p>Earned so far: KSh{{ p.calculated_earned }}</p>
+
+          {% if p.status == "Completed" %}
+            <span class="status-completed">Completed ✅</span>
+          {% else %}
+            <div class="product-meta">
+              <div class="meta-pill">Status: {{ p.status }}</div>
             </div>
-          </article>
-          {% endfor %}
-        {% else %}
-          <div class="empty-card">
-            <h3 style="color:#fff;">No purchases yet</h3>
-            <p>You haven't bought any packages. Visit <strong>Products</strong> to explore available packages and start investing.</p>
-          </div>
-        {% endif %}
-      </section>
-    </div>
+          {% endif %}
+        </div>
+      </article>
+      {% endfor %}
+    {% else %}
+      <div class="empty-card">
+        <h3 style="color:#fff;">No purchases yet</h3>
+        <p>You haven't bought any packages. Visit <strong>Products</strong> to explore available packages and start investing.</p>
+      </div>
+    {% endif %}
+  </section>
+</div>
+
 
     <!-- Flash messages container -->
     <div id="flash-container"></div>
 
   </main>
 
-  <!-- Bottom navigation -->
+    <!-- Bottom navigation -->
   <nav class="bottom-nav" role="navigation" aria-label="Bottom navigation">
     <a href="{{ url_for('home') }}"><i class="bi bi-house-fill"></i><span>Home</span></a>
     <a href="{{ url_for('product') }}"><i class="bi bi-box-seam"></i><span>Products</span></a>
@@ -399,6 +552,39 @@
               0%
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overlay Modal -->
+  <div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title" id="detailsModalLabel">Investment Packages Explained</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p>
+            Select any package that suits your investment goals. Each package has its own requirements and rewards.
+          </p>
+          <p>
+            <strong>How rewards work:</strong> Earnings are accumulated within a <span class="text-success fw-bold">24‑hour window</span>, day by day. 
+            Your balance grows steadily, and progress is tracked with precision.
+          </p>
+          <ul>
+            <li>Choose a package → commit your investment.</li>
+            <li>Rewards start accumulating immediately.</li>
+            <li>Every 24 hours, your daily reward is added to your total.</li>
+            <li>Track your journey with progress bars and summaries.</li>
+          </ul>
+          <p>
+            Invest wisely, watch your rewards pulse alive, and enjoy the thrill of growth!
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-success" data-bs-dismiss="modal">Got it!</button>
         </div>
       </div>
     </div>
@@ -440,6 +626,12 @@
       });
     });
 
+    // Details overlay trigger
+    document.getElementById('btnSummaryDetails').addEventListener('click', function () {
+      var detailsModal = new bootstrap.Modal(document.getElementById('detailsModal'));
+      detailsModal.show();
+    });
+
     // Flash messages
     function showFlashMessage(message, type="success") {
       const flashContainer = document.getElementById("flash-container");
@@ -477,4 +669,5 @@
   </script>
 </body>
 </html>
+
 

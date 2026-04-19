@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MetaEarn | Admin Investments</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <style>
+    body {
+      background: #111;
+      color: #fff;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #ffd700;
+      text-shadow: 0 0 10px rgba(255,215,0,0.8);
+    }
+    .table {
+      background: #222;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 0 20px rgba(255,215,0,0.5);
+    }
+    .table th {
+      background: #333;
+      color: #ffd700;
+      text-transform: uppercase;
+      font-size: 0.9rem;
+    }
+    .table td {
+      color: #e6f7ff;
+      vertical-align: middle;
+    }
+    .status-active {
+      color: #00ff99;
+      font-weight: bold;
+    }
+    .status-expired {
+      color: #ff4444;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h2>Admin – Investments</h2>
+
+  <div class="table-responsive">
+    <table class="table table-dark table-striped align-middle">
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Package</th>
+          <th>Details</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+  {% for item in purchases %}
+  {% set p = item.purchase %}
+  <tr>
+    <td>{{ p.user.email }}</td>
+    <td>{{ p.product_name }}</td>
+    <td>
+      SKU: {{ p.product_sku }}<br>
+      Price: {{ p.price }}<br>
+      Income/day: {{ item.daily_income }}<br>
+      Period: {{ p.period_days }} days
+    </td>
+    <td>
+      {% if item.status == "Active" %}
+        <span class="status-active">Active</span>
+      {% else %}
+        <span class="status-completed">Completed</span>
+      {% endif %}
+    </td>
+  </tr>
+  <tr>
+    <td colspan="4">
+      Day {{ item.days_elapsed }} of {{ p.period_days }}  
+      | Total earned: {{ item.total_earned }}  
+      | Today’s income: {{ item.daily_income }}
+      <div class="progress mt-2" style="height: 20px; cursor:pointer;">
+        <div class="progress-bar {% if item.status == 'Completed' %}bg-success{% else %}bg-warning{% endif %}"
+             role="progressbar"
+             style="width: {{ item.progress }}%"
+             aria-valuenow="{{ item.progress }}" aria-valuemin="0" aria-valuemax="100">
+          {{ item.progress }}%
+        </div>
+      </div>
+    </td>
+  </tr>
+  {% endfor %}
+</tbody>
+
+
+
+    </table>
+  </div>
+</body>
+</html>

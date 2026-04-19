@@ -67,6 +67,21 @@ def get_current_user():
 def allowed_file(filename):
     return filename and filename.lower().endswith(ALLOWED_IMAGE_EXT)
 
+def update_investments():
+    purchases = Purchase.query.filter_by(status="Active").all()
+    for p in purchases:
+        days_elapsed = (datetime.utcnow().date() - p.start_date.date()).days
+        if days_elapsed >= p.period_days:
+            # Mark as completed
+            p.status = "Completed"
+
+            # Credit total return to user balance
+            user = User.query.get(p.user_id)
+            if user:
+                user.balance += p.total_return
+
+    db.session.commit()
+
 # -------------------------
 # Public / Landing
 # -------------------------
@@ -89,6 +104,17 @@ def landing():
 @app.route("/features")
 def features():
     return render_template("features.html")
+
+@app.before_request
+def restrict_admin_pages():
+    # If the path starts with /admin
+    if request.path.startswith("/admin"):
+        # Require login
+        if not current_user.is_authenticated:
+            return redirect(url_for("login"))
+        # Require admin role
+        if not getattr(current_user, "is_admin", False):
+            return "Unauthorized", 403
 
 @app.route("/product")
 @login_required
@@ -993,23 +1019,57 @@ def dashboard():
     user = current_user
 
     try:
-        # Query user-related data
+        # --- Investment update logic ---
         purchases = Purchase.query.filter_by(user_id=user.id).all()
-        recharges = Recharge.query.filter_by(user_id=user.id).order_by(Recharge.created_at.desc()).all()
-        withdrawals = Withdrawal.query.filter_by(user_id=user.id).order_by(Withdrawal.created_at.desc()).all()
+        for p in purchases:
+            if p.status == "Active":
+                days_elapsed = (datetime.utcnow().date() - p.start_date.date()).days
+
+                # Calculate earned so far
+                earned = min(days_elapsed * p.income_per_day,
+                             p.period_days * p.income_per_day)
+                additional = earned - p.earned  # new earnings since last check
+
+                if additional > 0:
+                    p.earned = earned
+                    user.wallet_balance += additional
+
+                # If investment period is complete
+                if days_elapsed >= p.period_days:
+                    p.status = "Completed"
+
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            flash("Could not update investments.", "danger")
+            print("Investment update error:", e)
+
+        # --- Query user-related data ---
+        recharges = Recharge.query.filter_by(user_id=user.id)\
+            .order_by(Recharge.created_at.desc()).all()
+        withdrawals = Withdrawal.query.filter_by(user_id=user.id)\
+            .order_by(Withdrawal.created_at.desc()).all()
         products = Product.query.filter_by(available=1).all()
 
-        # Enrich products with product_map details
+        # --- Enrich products with product_map details (safe defaults) ---
         for p in products:
             if p.sku in product_map:
                 details = product_map[p.sku]
                 p.name = details.get("name", p.name)
-                p.price = details.get("price", p.price)
-                p.income_per_day = details.get("income", p.income_per_day)
-                p.period_days = details.get("days", p.period_days)
+                p.price = details.get("price") or p.price or 0
+                p.income_per_day = details.get("income") or p.income_per_day or 0
+                p.period_days = details.get("days") or p.period_days or 0
                 p.image = details.get("image", p.image)
 
-        # Tutorial flag: show only if user has NOT seen it
+        # --- Add calculated fields for purchases ---
+        for p in purchases:
+            elapsed = (datetime.utcnow().date() - p.start_date.date()).days
+            p.days_remaining = max(p.period_days - elapsed, 0)
+            p.calculated_earned = p.earned
+            p.total_return = p.income_per_day * p.period_days
+
+        # Tutorial flag
         show_tutorial = not bool(user.tutorial_seen)
 
         return render_template(
@@ -1036,6 +1096,7 @@ def dashboard():
         )
 
 
+
 @app.route("/skip_tutorial", methods=["POST"])
 @login_required
 def skip_tutorial():
@@ -1044,6 +1105,39 @@ def skip_tutorial():
     db.session.commit()
     db.session.refresh(user)
     return jsonify({"status": "ok"})
+
+@app.route('/admin/investments')
+def admin_investments():
+    purchases = Purchase.query.join(User).all()
+
+    enriched = []
+    for p in purchases:
+        days_elapsed = (datetime.utcnow().date() - p.start_date.date()).days + 1
+        if days_elapsed < 0:
+            days_elapsed = 0
+        days_elapsed = min(days_elapsed, p.period_days)
+
+        daily_income = p.income_per_day
+        total_earned = daily_income * days_elapsed
+        progress = int((days_elapsed / p.period_days) * 100)
+
+        # Status based on progress
+        status = "Completed" if progress >= 100 else "Active"
+
+        enriched.append({
+            "purchase": p,
+            "days_elapsed": days_elapsed,
+            "daily_income": daily_income,
+            "total_earned": total_earned,
+            "progress": progress,
+            "status": status
+        })
+
+    return render_template("admin_investments.html", purchases=enriched)
+
+
+
+
 
               
 
