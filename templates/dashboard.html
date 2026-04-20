@@ -90,6 +90,19 @@
   animation: blinkIcon 2s infinite ease-in-out; /* blinking effect */
 }
 
+
+.tutorial-overlay {
+  position: fixed; top:0; left:0; right:0; bottom:0;
+  background: rgba(0,0,0,0.8);
+  display: none; justify-content: center; align-items: center;
+  z-index: 9999; color:#fff; text-align:center;
+}
+.tutorial-step { max-width: 400px; background:#222; padding:20px; border-radius:10px; }
+.tutorial-step h3 { margin-bottom:10px; }
+.tutorial-step button { margin:5px; padding:8px 12px; border:none; border-radius:5px; }
+
+
+
 /* Radiant background behind each icon */
 .icon-box::before {
   content: "";
@@ -217,6 +230,78 @@
   margin: 10px 0;
 }
 
+.download-banner {
+  position: fixed;
+  top: 20%; /* stays above half the page */
+  right: 20px;
+  background: #0b1220;
+  color: #ffd700;
+  font-weight: bold;
+  padding: 20px 24px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  z-index: 9999;
+  border: 3px solid #ffd700;
+  box-shadow: 0 0 25px rgba(255, 215, 0, 0.9);
+  animation: flashEdges 1.2s infinite, pulseGlow 2s infinite;
+}
+
+.banner-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.banner-text {
+  font-size: 18px;
+  font-weight: 700;
+  text-shadow: 0 0 12px #ff8c00;
+}
+
+.download-btn {
+  background: linear-gradient(135deg, #ffd700, #ff8c00);
+  color: #0b1220;
+  padding: 10px 18px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: bold;
+  transition: transform 0.2s ease, background 0.3s ease;
+  box-shadow: 0 0 15px #ffd700;
+}
+
+.download-btn:hover {
+  transform: scale(1.15);
+  background: #ffcc00;
+  color: #000;
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  color: #ffd700;
+  font-weight: bold;
+}
+
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 15px #ffd700; }
+  50% { box-shadow: 0 0 40px #ff8c00; }
+  100% { box-shadow: 0 0 15px #ffd700; }
+}
+
+@keyframes flashEdges {
+  0% { border-color: #ffd700; }
+  25% { border-color: #ff4500; }
+  50% { border-color: #ffffff; }
+  75% { border-color: #ff8c00; }
+  100% { border-color: #ffd700; }
+}
 
 /* Bottom nav */
 .bottom-nav {
@@ -339,6 +424,15 @@ MetaEarn — founded in 2013, empowering users with daily income opportunities �
     <div class="icon-box"><i class="bi bi-list-check"></i><p>Task</p></div>
   </div>
 
+<!-- Premium Floating App Download Banner -->
+<div id="downloadAppBanner" class="download-banner">
+  <div class="banner-content">
+    <span class="banner-text">✨ Experience MetaEarn Anywhere</span>
+    <button class="download-btn" onclick="downloadApp()">Install App</button>
+  </div>
+  <button class="close-btn" onclick="document.getElementById('downloadAppBanner').style.display='none'">×</button>
+</div>
+
 {% if show_tutorial %}
 <!-- Tutorial Overlay -->
 <div id="tutorial-overlay" class="tutorial-overlay">
@@ -458,17 +552,18 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 </script>
 
-<style>
-.tutorial-overlay {
-  position: fixed; top:0; left:0; right:0; bottom:0;
-  background: rgba(0,0,0,0.8);
-  display: none; justify-content: center; align-items: center;
-  z-index: 9999; color:#fff; text-align:center;
+<script>
+function downloadApp() {
+  const link = document.createElement('a');
+  link.href = "https://metarearn.onrender.com/static/app-release-signed.apk"; // ✅ correct path
+  link.download = "MetaEarn.apk";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
-.tutorial-step { max-width: 400px; background:#222; padding:20px; border-radius:10px; }
-.tutorial-step h3 { margin-bottom:10px; }
-.tutorial-step button { margin:5px; padding:8px 12px; border:none; border-radius:5px; }
-</style>
+</script>
+
+
 
 <script>
 function startTutorial() {
@@ -494,6 +589,7 @@ function skipTutorial() {
 
 window.onload = startTutorial;
 </script>
+
 
 
 <script>
