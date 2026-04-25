@@ -1,0 +1,10 @@
+<table class="table table-dark">
+  <tr><th>ID</th><th>Email</th><th>Status</th></tr>
+  {% for user in users %}
+    <tr>
+      <td>{{ user.id }}</td>
+      <td>{{ user.email }}</td>
+      <td>{{ "Admin" if user.is_admin else "User" }}</td>
+    </tr>
+  {% endfor %}
+</table>

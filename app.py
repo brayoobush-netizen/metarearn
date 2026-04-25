@@ -295,22 +295,25 @@ def home():
 # -------------------------
 @app.route("/register", methods=["GET", "POST"])
 def register():
+    # Capture referral code from link (?ref=...)
+    referral_code = request.args.get("ref")
+
     if request.method == "POST":
         email = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "")
         profile_file = request.files.get("profile")
 
-        # Referral code can come from form OR link (?ref=...)
-        ref_code = request.form.get("referral_code") or request.args.get("ref")
+        # Referral code can come from form OR link
+        ref_code = request.form.get("referral_code") or referral_code
 
         # ✅ Require Gmail
         if not email.endswith("@gmail.com"):
             flash("Only Gmail addresses are allowed.", "danger")
-            return redirect(url_for("register"))
+            return redirect(url_for("register", ref=ref_code))
 
         if not email or not password:
             flash("Please provide email and password.", "danger")
-            return redirect(url_for("register"))
+            return redirect(url_for("register", ref=ref_code))
 
         existing_user = User.query.filter_by(email=email).first()
         if existing_user:
@@ -335,6 +338,10 @@ def register():
             if inviter:
                 new_user.referred_by = inviter.id
                 flash(f"You were referred by {inviter.email}", "success")
+
+                # 💰 Credit inviter immediately (example: flat bonus)
+                inviter.wallet_balance += 100  # or calculate % rebate
+                db.session.add(inviter)
             else:
                 flash("Invalid referral code.", "warning")
 
@@ -353,7 +360,9 @@ def register():
         flash("Account created successfully. Please log in.", "success")
         return redirect(url_for("login"))
 
-    return render_template("register.html")
+    # Pass referral_code into template so it auto-fills
+    return render_template("register.html", referral_code=referral_code)
+
 
 
 # -------------------------
@@ -1161,6 +1170,18 @@ def financial():
         total_recharge=total_recharge,
         user=user
     )
+
+@app.route("/admin/users")
+@login_required
+def list_users():
+    if not current_user.is_admin:
+        flash("Access denied.", "danger")
+        return redirect(url_for("dashboard"))
+
+    users = User.query.all()
+    return render_template("admin_users.html", users=users)
+
+
 
 @app.route("/mine")
 @login_required
