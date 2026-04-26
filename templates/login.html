@@ -21,32 +21,52 @@
     object-fit: cover;
   }
 
+  /* Dark overlay for readability */
   .video-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0,0,0,0.4);
+    background: rgba(0,0,0,0.55);
     z-index: 0;
   }
 
-  /* Glowing login card */
+  /* Login card with neon edge glow */
   .login-card {
-    background: rgba(255, 255, 255, 0.9);
-    color: #333;
-    border-radius: 10px;
-    box-shadow: 0 0 20px rgba(0, 200, 255, 0.8);
-    padding: 30px;
-    margin-top: 60px;
+    background: rgba(15, 15, 30, 0.95); /* dark interior for clarity */
+    color: #fff;
+    border-radius: 16px;
+    padding: 35px;
+    margin-top: 40px;
     position: relative;
     z-index: 1;
-    animation: glowPulse 2s infinite alternate;
+    overflow: hidden;
   }
 
-  @keyframes glowPulse {
-    from { box-shadow: 0 0 15px rgba(0, 200, 255, 0.6); }
-    to   { box-shadow: 0 0 35px rgba(0, 200, 255, 1); }
+  /* Neon edge glow only */
+  .login-card::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    border-radius: 16px;
+    padding: 2px;
+    background: linear-gradient(90deg,
+      #4a00ff, #00c0ff, #8a2be2, #00ffcc, #4a00ff);
+    background-size: 400% 400%;
+    animation: edgeGlow 12s linear infinite;
+    -webkit-mask: 
+      linear-gradient(#fff 0 0) content-box, 
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    z-index: -1;
+  }
+
+  @keyframes edgeGlow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
   }
 
   .login-header {
@@ -54,48 +74,87 @@
     margin-bottom: 20px;
   }
   .login-header h2 {
-    color: #003366;
-    font-weight: 700;
+    color: #00c0ff;
+    font-weight: 800;
+    text-shadow: 0 0 12px #00c0ff, 0 0 24px #4a00ff;
+  }
+  .login-header p {
+    color: #ddd;
   }
 
   .form-control {
     border-radius: 6px;
-    margin-bottom: 15px;
-    border: 1px solid #ccc;
-    box-shadow: 0 0 10px rgba(40, 167, 69, 0.6);
+    margin-bottom: 18px;
+    border: none;
+    background: rgba(255,255,255,0.12);
+    color: #fff;
+    font-size: 1.05rem;
+    box-shadow: inset 0 0 8px rgba(0, 192, 255, 0.4);
     transition: box-shadow 0.3s ease;
   }
+  .form-control::placeholder {
+    color: #eee; /* brighter placeholder for clarity */
+  }
   .form-control:focus {
-    box-shadow: 0 0 20px rgba(40, 167, 69, 1);
+    box-shadow: inset 0 0 15px #8a2be2;
     outline: none;
   }
 
   .btn-login {
-    background: #28a745;
+    background: #4a00ff;
     border: none;
     color: #fff;
-    font-weight: 600;
-    padding: 12px;
+    font-weight: 700;
+    padding: 16px;
     border-radius: 6px;
     width: 100%;
-    transition: box-shadow 0.3s ease;
-    box-shadow: 0 0 15px rgba(40, 167, 69, 0.8);
+    font-size: 1.1rem;
+    transition: box-shadow 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 0 20px #4a00ff;
   }
   .btn-login:hover {
-    background: #218838;
-    box-shadow: 0 0 25px rgba(40, 167, 69, 1);
+    background: #3700cc;
+    box-shadow: 0 0 30px #4a00ff, 0 0 50px #00c0ff;
+    transform: scale(1.05);
   }
 
   .btn-back {
-    margin-top: 15px;
-    background: #6c757d;
+    margin-top: 18px;
+    background: #00c0ff;
     border: none;
-    color: #fff;
-    font-weight: 600;
-    padding: 12px;
+    color: #000;
+    font-weight: 700;
+    padding: 16px;
     border-radius: 6px;
     width: 100%;
-    box-shadow: 0 0 15px rgba(108, 117, 125, 0.8);
+    font-size: 1.1rem;
+    box-shadow: 0 0 20px #00c0ff;
+    transition: transform 0.2s ease;
+  }
+  .btn-back:hover {
+    background: #0099cc;
+    box-shadow: 0 0 30px #00c0ff, 0 0 50px #4a00ff;
+    transform: scale(1.05);
+  }
+
+  /* Mobile-first adjustments */
+  @media (max-width: 768px) {
+    .login-card {
+      margin-top: 20px;
+      padding: 40px;
+      transform: scale(1.25); /* bigger on mobile */
+    }
+    .login-header h2 {
+      font-size: 2rem;
+    }
+    .form-control {
+      font-size: 1.2rem;
+      padding: 16px;
+    }
+    .btn-login, .btn-back {
+      font-size: 1.2rem;
+      padding: 18px;
+    }
   }
 </style>
 
