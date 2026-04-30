@@ -8,7 +8,11 @@
   <!-- PWA manifest and theme color -->
   <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
   <meta name="theme-color" content="#ffd700">
+
+  <!-- Mobile scaling fix -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
+
 <body>
   <nav class="navbar navbar-dark bg-dark">
     <div class="container">

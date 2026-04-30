@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <!-- Mobile scaling fix -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sticky Footer Fixed</title>
   <style>
@@ -53,18 +54,18 @@
 
     /* Hero Section */
     .hero {
-      padding: 100px 20px;
+      padding: 80px 20px;
       text-align: center;
       color: #fff;
       text-shadow: 1px 1px #000;
     }
     .hero h1 {
-      font-size: 3.5rem;
+      font-size: 3rem;
       font-weight: bold;
       margin-bottom: 20px;
     }
     .hero p {
-      font-size: 1.3rem;
+      font-size: 1.2rem;
       margin-bottom: 30px;
     }
 
@@ -90,24 +91,20 @@
       opacity: 0.9;
     }
 
-    /* Move carousel indicators below the banners */
-#jackpotCarousel .carousel-indicators {
- max-width: 200px;   /* narrow carousel width */
-
-}
-
-    .carousel-item {
-      height: 30px;       /* fixed height for each banner */
+    /* Carousel */
+    #jackpotCarousel .carousel-indicators {
+      max-width: 200px;
     }
-
+    .carousel-item {
+      height: 60px;
+    }
     .banner-img {
       display: block;
       width: 100%;
-      height: 100%;       /* fill the carousel-item height */
+      height: 100%;
       border-radius: 8px;
-      object-fit: cover;  /* crop neatly instead of stretching */
+      object-fit: cover;
     }
-
     .carousel-inner {
       display: flex;
       justify-content: center;
@@ -119,7 +116,7 @@
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: 25px;
-      padding: 60px;
+      padding: 40px;
     }
     .product-card {
       background: #fff;
@@ -145,7 +142,7 @@
 
     /* Footer */
     .footer {
-      margin-top: auto;    /* Push footer to bottom */
+      margin-top: auto;
       background: rgba(0,0,0,0.85);
       color: #fff;
       text-align: center;
@@ -164,7 +161,7 @@
         font-size: 1rem;
       }
       .product-grid {
-        padding: 30px;
+        padding: 20px;
         gap: 15px;
       }
       .footer {
@@ -175,12 +172,62 @@
         max-width: 95%;
       }
       .carousel-item {
-        height: 70px;     /* smaller banners on phones */
+        height: 70px;
+      }
+      .navbar-brand {
+        font-size: 1.2rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .hero h1 {
+        font-size: 1.8rem;
+      }
+      .hero p {
+        font-size: 0.9rem;
+      }
+      .btn-lg {
+        font-size: 0.9rem;
+        padding: 10px 20px;
+      }
+      .product-card {
+        padding: 15px;
       }
     }
   </style>
 </head>
 <body>
-  <!-- your body content unchanged -->
+  <nav class="navbar">
+    <div class="container">
+      <a class="navbar-brand" href="#">Dashboard</a>
+      <a class="navbar-brand" href="#">Wallet</a>
+    </div>
+  </nav>
+
+  <main>
+    <section class="hero">
+      <h1>Welcome to My App</h1>
+      <p>Responsive design that feels closer on mobile.</p>
+      <button class="btn btn-lg btn-primary">Get Started</button>
+      <button class="btn btn-lg btn-success">Learn More</button>
+    </section>
+
+    <section class="product-grid">
+      <div class="product-card">
+        <img src="https://via.placeholder.com/250" alt="Product">
+        <h4>Product One</h4>
+        <p>Clean and responsive card layout.</p>
+      </div>
+      <div class="product-card">
+        <img src="https://via.placeholder.com/250" alt="Product">
+        <h4>Product Two</h4>
+        <p>Looks bold and clear on Android.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>&copy; 2026 My App. All rights reserved.</p>
+  </footer>
 </body>
 </html>
